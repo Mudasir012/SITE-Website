@@ -2,6 +2,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, Code2, Gamepad2 } from 'lucide-react';
 import SectionHeading from '../components/SectionHeading.jsx';
 import Button from '../components/Button.jsx';
+import EventCard from '../components/EventCard.jsx';
 import { competitionCategories, events } from '../data/tracks.js';
 import { event } from '../data/event.js';
 
@@ -43,37 +44,23 @@ export default function TracksPage() {
                 </span>
               </div>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {categoryEvents.map((name, idx) => (
-                  <motion.article
-                    key={name}
-                    initial={reduced ? false : { opacity: 0, y: 12 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.3 }}
-                    transition={{ duration: reduced ? 0 : 0.35, delay: reduced ? 0 : idx * 0.025 }}
-                    className="academic-card flex h-full flex-col rounded-[6px] border-navy-700 p-5"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-[11px] font-bold tracking-wider text-sand-400/70">
-                        {code}
-                        {String(idx + 1).padStart(2, '0')}
-                      </span>
-                      <ArrowRight className="h-4 w-4 text-sand-400/50" aria-hidden="true" />
-                    </div>
-                    <h3 className="mt-4 font-display text-base font-bold leading-snug text-ivory sm:text-lg">
-                      {name}
-                    </h3>
-                    <a
-                      href={event.registrationUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-5 inline-flex items-center gap-1.5 border-t border-navy-700/70 pt-3 font-mono text-[11px] font-bold uppercase tracking-wider text-sand-300 transition-colors hover:text-white"
+              <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {categoryEvents.map((item, idx) => {
+                  const eventIndex = events.findIndex(({ name }) => name === item.name);
+
+                  return (
+                    <motion.div
+                      key={item.name}
+                      initial={reduced ? false : { opacity: 0, y: 12 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.2 }}
+                      transition={{ duration: reduced ? 0 : 0.35, delay: reduced ? 0 : idx * 0.025 }}
+                      className="h-full"
                     >
-                      Register
-                      <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-                    </a>
-                  </motion.article>
-                ))}
+                      <EventCard event={item} index={eventIndex} href={event.registrationUrl} />
+                    </motion.div>
+                  );
+                })}
               </div>
             </section>
           );

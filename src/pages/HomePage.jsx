@@ -15,6 +15,7 @@ import TornEdge from '../components/TornEdge.jsx';
 import PaperPlane from '../components/PaperPlane.jsx';
 import StickyNote from '../components/StickyNote.jsx';
 import UniversityCard from '../components/UniversityCard.jsx';
+import EventCard from '../components/EventCard.jsx';
 import { event } from '../data/event.js';
 import { events } from '../data/tracks.js';
 
@@ -423,26 +424,14 @@ export default function HomePage({ onNavigate }) {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {events.slice(0, 6).map(({ name, code }, i) => (
-              <UniversityCard
-                key={name}
-                variant="compact"
-                label={`EVENT FILE · 0${i + 1}`}
-                code={`CATEGORY ${code}`}
-                showCrest={false}
-                className="h-full"
-              >
-                <h3 className="font-display text-lg font-bold text-ivory">{name}</h3>
-                <div className="mt-5 pt-3 border-t border-navy-700/60">
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('tracks', '#/tracks')}
-                    className="text-xs font-bold text-sand-300 hover:text-sand-200 flex items-center gap-1"
-                  >
-                    View All Events <ArrowRight className="h-3 w-3" />
-                  </button>
-                </div>
-              </UniversityCard>
+            {events.slice(0, 6).map((item, i) => (
+              <EventCard
+                key={item.name}
+                event={item}
+                index={i}
+                onNavigate={() => onNavigate('tracks', '#/tracks')}
+                actionLabel="View all events"
+              />
             ))}
           </div>
         </div>
