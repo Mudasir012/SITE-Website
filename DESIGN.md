@@ -4,7 +4,7 @@
 
 - **Inspiration:** Premier Pakistani collegiate conventions (e.g. NASCON'26 by FAST-NUCES, LUMS PsiFi) and US university hackathons (MIT HackMIT, Stanford TreeHacks, Cal Hacks).
 - **Core Aesthetic:** Dignified Collegiate Realism — majestic deep collegiate navy blue canvas, warm sand/ivory accents, crisp hairline architectural lines, and bold editorial typography.
-- **Architectural Scope:** Multi-page architecture with 8 dedicated pages (`Home`, `About`, `Tracks`, `Prizes`, `Schedule`, `Judges & Mentors`, `Sponsors`, `FAQ`), unified by a shared floating bottom navigation dock and footer.
+- **Architectural Scope:** Multi-page architecture with 5 dedicated pages (`Home`, `About`, `Events`, `Schedule`, `FAQ`), unified by a shared floating bottom navigation dock and footer.
 
 ## Color Palette
 
@@ -30,11 +30,8 @@
 - **Floating Bottom Dock:** Centered navy capsule with a 1px sand highlight, icon-led page tabs, and a solid sand Register action. The active tab is marked by a fluid sand bubble that springs between tabs; labels collapse to the active tab on small screens.
 - **Hero Section:** Tone-on-tone ghost watermark background, Urdu motto, massive title, hairline separator, prominent date display, solid sand action button, and emblem motif.
 - **Dedicated Pages:**
-  1. `HomePage`: NASCON-inspired hero, live countdown, quick highlights, track preview, sponsor reel.
-  2. `AboutPage`: The CUI Abbottabad mountain campus story, one-day campus experience, 4-step interactive readiness checklist.
-  3. `TracksPage`: 6 specialized tracks with problem statements, recommended tech stacks, and lead mentors.
-  4. `PrizesPage`: Podium awards breakdown (PKR 600K+ total pool), 4 special category honors, and CUI ORIC incubation details.
-  5. `SchedulePage`: 3-day timeline with day tabs, event-category filters (Hacking, Workshops, Ceremonies, Judging, Breaks).
-  6. `JudgesPage`: Roster with faculty and industry affiliations, judging vs. mentoring roles, and application callout.
-  7. `SponsorsPage`: Corporate partner tiers, chapter endorsements, and sponsorship prospectus download.
-  8. `FaqPage`: Categorized interactive accordion covering eligibility, travel, catering, and competition rules.
+  1. `HomePage`: Collegiate hero, live countdown, quick highlights, and featured events.
+  2. `AboutPage`: The CUI Abbottabad campus story and interactive readiness checklist.
+  3. `TracksPage`: 19 events grouped into two competition categories.
+  4. `SchedulePage`: One-day timeline with session-category filters.
+  5. `FaqPage`: Categorized interactive accordion covering eligibility, preparation, and competition rules.

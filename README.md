@@ -1,6 +1,6 @@
 # CITE Hackathon 2026 — Official Website
 
-An eight-page collegiate site for CITE Hackathon 2026 at COMSATS University Islamabad, Abbottabad Campus. Built with React 18, Vite 5, Tailwind CSS 3, Framer Motion, and lucide-react.
+A five-page collegiate site for CITE 2026 at COMSATS University Islamabad, Abbottabad Campus. Built with React 18, Vite 5, Tailwind CSS 3, Framer Motion, and lucide-react.
 
 ## Quick start
 
@@ -15,7 +15,7 @@ Requires Node.js 18+.
 
 ## Architecture
 
-- Hash-routed pages: Home, About, Tracks, Prizes, Schedule, Judges & Mentors, Sponsors, FAQ.
+- Hash-routed pages: Home, About, Events, Schedule, FAQ.
 - `src/App.jsx` owns hash routing, page transitions, and route-level lazy loading.
 - `src/sections/Dock.jsx` and `src/sections/Footer.jsx` are the only shared sections.
 - `src/pages/` contains one file per route; `src/components/` contains reusable primitives and motion wrappers.
@@ -26,15 +26,12 @@ Requires Node.js 18+.
 | File | Controls |
 |---|---|
 | `src/data/event.js` | Event identity, date, venue, registration URL, contact, socials, stats, university facts |
-| `src/data/tracks.js` | Competition tracks |
-| `src/data/prizes.js` | Podium and special awards |
+| `src/data/tracks.js` | Competition event lineup |
 | `src/data/schedule.js` | One-day agenda and session types |
-| `src/data/people.js` | Judge and mentor profiles |
-| `src/data/sponsors.js` | Sponsor tiers and partner names |
 | `src/data/faqs.js` | FAQ questions and answers |
 | `index.html` | Title, meta/OG tags, fonts, JSON-LD |
 
-The registration URL and the judge/sponsor profiles are still placeholders and are intentionally presented as-is until real data is supplied.
+The registration URL and contact details are still placeholders and are intentionally presented as-is until real data is supplied.
 
 ## Theme
 
@@ -44,14 +41,14 @@ Fonts: Space Grotesk for display, Inter for UI text, Playfair Display for editor
 
 ## Motion
 
-Motion is authored in Framer Motion: hero clip reveal, page transitions, a spring dock indicator, shared-element filter/track selection, countdown digit rolls, checklist feedback, and restrained scroll reveals. Every animated component has a `prefers-reduced-motion` branch. CSS only animates the sponsor marquee and suppresses it under reduced motion.
+Motion is authored in Framer Motion: hero clip reveal, page transitions, a spring dock indicator, filter selection, countdown digit rolls, checklist feedback, and restrained scroll reveals. Every animated component has a `prefers-reduced-motion` branch.
 
 ## Before launch
 
 - Replace the registration URL in `src/data/event.js`.
-- Replace placeholder judges, mentors, sponsors, contact details, and social links.
+- Replace placeholder contact details and social links.
 - Export a real 1200×630 PNG/JPG for `og:image`.
-- Verify all dates and prize amounts against the confirmed event brief.
+- Verify all dates against the confirmed event brief.
 
 ## Accessibility
 

@@ -8,28 +8,27 @@ web
 
 ## Users
 
-- **Primary (equal weight):** university and college students across Pakistan deciding whether to register for the hackathon.
-- **Primary (equal weight):** prospective sponsors evaluating whether the event is credible and worth funding.
-- **Secondary:** judges and mentors checking legitimacy before committing; faculty and university administration.
+- **Primary:** university and college students across Pakistan deciding whether to register for the competition.
+- **Secondary:** faculty and university administration checking event details.
 
 ## Product Purpose
 
-Official website of CITE Hackathon 2026, hosted by the CITE society at COMSATS University Islamabad, Abbottabad Campus. It must drive student registrations and sponsor inquiries, and present tracks, prizes, schedule, judges/mentors, sponsors, and FAQs. Success = registrations submitted and sponsorship conversations started.
+Official website of CITE 2026, hosted by the CITE society at COMSATS University Islamabad, Abbottabad Campus. It must drive student registrations and present the competition lineup, schedule, and FAQs. Success = registrations submitted.
 
 ## Positioning
 
-Pakistan's national-level, on-campus student hackathon: one full day, ~800 participants, real industry judges and mentors, cash prizes plus incubation at CUI Abbottabad — not an online or single-city event.
+Pakistan's national-level, on-campus student competition: one full day, ~800 participants, 19 events — not an online or single-city event.
 
 ## Operating Context
 
-- Event date December 18, 2026 at CUI Abbottabad Campus; registration via an external form (URL currently a placeholder).
+- Event date December 12, 2026 at CUI Abbottabad Campus; registration via an external form (URL currently a placeholder).
 - Static marketing site, no backend; all content lives in `src/data/`.
-- Site architecture confirmed with the owner: 8 dedicated pages — Home, About, Tracks, Prizes, Schedule, Judges & Mentors, Sponsors, FAQ — sharing one floating bottom navigation dock and footer.
+- Site architecture: 5 dedicated pages — Home, About, Events, Schedule, FAQ — sharing one floating bottom navigation dock and footer.
 
 ## Capabilities and Constraints
 
 - React 18 + Vite 5 + Tailwind CSS 3 + Framer Motion + lucide-react (incumbent stack, retained).
-- Placeholder material that must be replaced before launch: registration URL, contact email/phone, judge/mentor names and photos, sponsor names/logos, social links, OG image.
+- Placeholder material that must be replaced before launch: registration URL, contact email/phone, social links, OG image.
 - Owner granted full freedom over content structure, copy, and features in the redesign — nothing from the previous single-page build must survive.
 
 ## Brand Commitments
@@ -39,12 +38,12 @@ Pakistan's national-level, on-campus student hackathon: one full day, ~800 parti
 
 ## Evidence on Hand
 
-- Realistic placeholder copy and data in `src/data/` (tracks, prizes, schedule, FAQs are plausible but unconfirmed; judges/mentors/sponsors are invented placeholders and must not be presented as confirmed partnerships).
+- Placeholder copy and data in `src/data/` (events, schedule, and FAQs are plausible but unconfirmed).
 - No real photos, logos, testimonials, or press assets yet.
 
 ## Product Principles
 
-1. Two audiences, one site: every page must serve both a student deciding to register and a sponsor deciding to fund.
+1. One audience, one job: help a student decide to register and find their event.
 2. Credibility is the product: specifics (dates, venues, numbers, named institutions) over hype.
 3. Restraint over effects: professional craft, solid color, honest layout — no decorative chrome.
 4. One topic per page: depth and findability beat cramming everything into one scroll.

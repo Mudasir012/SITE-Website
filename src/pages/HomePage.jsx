@@ -1,14 +1,10 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowRight,
-  Award,
-  Building2,
   ChevronRight,
-  FlaskConical,
   GraduationCap,
   Landmark,
   MapPin,
-  Network,
   Users,
 } from 'lucide-react';
 import Button from '../components/Button.jsx';
@@ -18,11 +14,9 @@ import Reveal from '../components/Reveal.jsx';
 import TornEdge from '../components/TornEdge.jsx';
 import PaperPlane from '../components/PaperPlane.jsx';
 import StickyNote from '../components/StickyNote.jsx';
-import DoodleArrow from '../components/DoodleArrow.jsx';
 import UniversityCard from '../components/UniversityCard.jsx';
 import { event } from '../data/event.js';
-import { tracks } from '../data/tracks.js';
-import { sponsorTiers } from '../data/sponsors.js';
+import { events } from '../data/tracks.js';
 
 // ── Thumbtack SVG (decorative pin holding the hero card) ──
 function Thumbtack({ className = '' }) {
@@ -88,10 +82,6 @@ function MarkerUnderline({ children, className = '' }) {
 const universityIcons = {
   GraduationCap,
   Landmark,
-  FlaskConical,
-  Building2,
-  Award,
-  Network,
 };
 
 export default function HomePage({ onNavigate }) {
@@ -217,7 +207,7 @@ export default function HomePage({ onNavigate }) {
           <motion.div variants={item} className="mt-8 inline-block">
             <MarkerUnderline>
               <span className="block font-display text-2xl sm:text-3xl md:text-[2.4rem] font-extrabold tracking-widest text-sand-100 px-4">
-                18 DECEMBER 2026
+                12 DECEMBER 2026
               </span>
             </MarkerUnderline>
             <p className="mt-3 font-mono text-xs sm:text-sm text-sand-300/80 font-medium">
@@ -236,9 +226,6 @@ export default function HomePage({ onNavigate }) {
           </motion.div>
 
           <motion.div variants={item} className="mt-10 flex flex-col items-center justify-center">
-            <div className="mb-4 hidden sm:block">
-              <DoodleArrow text="Zero fee · Free meals & parking included!" />
-            </div>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
               <Button
                 href={event.registrationUrl}
@@ -282,7 +269,7 @@ export default function HomePage({ onNavigate }) {
       ====================================================================== */}
       <section className="relative bg-navy-950 py-10">
         <div className="wrap">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
             {event.stats.map(({ value, prefix = '', suffix = '', label }) => (
               <div key={label} className="p-3">
                 <p className="font-display text-2xl sm:text-3xl lg:text-4xl font-black text-sand-300">
@@ -398,13 +385,13 @@ export default function HomePage({ onNavigate }) {
             {/* Sticky notes column */}
             <div className="lg:col-span-4 space-y-6">
               <StickyNote title="Campus Packing Tip" color="sand" rotate="2.5deg">
-                Abbottabad in December is chilly! Pack warm hoodies and jackets. Inside the CS block, power sockets and hot chai are provided all day.
+                Abbottabad in December is chilly! Pack warm hoodies and jackets.
               </StickyNote>
               <StickyNote title="Coming Solo?" color="blue" rotate="-3deg">
                 No squad? No worries! Over 30% of participants register solo. We run an on-campus team-formation session right after the keynote.
               </StickyNote>
               <StickyNote title="Pro Tip 🎯" color="green" rotate="1.5deg">
-                Attend every workshop — judges love teams that use the mentorship sessions to sharpen their projects.
+                Attend every workshop — they are built to help you sharpen your project.
               </StickyNote>
             </div>
           </div>
@@ -422,38 +409,37 @@ export default function HomePage({ onNavigate }) {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
             <div>
               <span className="font-mono text-xs font-bold uppercase tracking-widest text-sand-400">Competitions &amp; Challenges</span>
-              <h2 className="mt-2 font-display text-2xl sm:text-4xl font-bold uppercase tracking-tight text-ivory">Featured Tracks</h2>
-              <p className="mt-1 text-sm text-ivory-muted">Six dedicated fields of engineering, civic problems, and prize pools.</p>
+              <h2 className="mt-2 font-display text-2xl sm:text-4xl font-bold uppercase tracking-tight text-ivory">Featured Events</h2>
+              <p className="mt-1 text-sm text-ivory-muted">19 competitions across two arenas — coding, design, gaming, and more.</p>
             </div>
             <button
               type="button"
               onClick={() => onNavigate('tracks', '#/tracks')}
               className="inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wider text-sand-300 hover:text-white transition-colors"
             >
-              <span>View All 6 Dedicated Tracks</span>
+              <span>View All 19 Events</span>
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {tracks.slice(0, 3).map((track, i) => (
+            {events.slice(0, 6).map(({ name, code }, i) => (
               <UniversityCard
-                key={track.title}
+                key={name}
                 variant="compact"
-                label={`TRACK FILE · 0${i + 1}`}
-                code="1 DAY"
+                label={`EVENT FILE · 0${i + 1}`}
+                code={`CATEGORY ${code}`}
                 showCrest={false}
                 className="h-full"
               >
-                <h3 className="font-display text-lg font-bold text-ivory">{track.title}</h3>
-                <p className="mt-2 text-xs text-ivory-muted leading-relaxed">{track.description}</p>
+                <h3 className="font-display text-lg font-bold text-ivory">{name}</h3>
                 <div className="mt-5 pt-3 border-t border-navy-700/60">
                   <button
                     type="button"
                     onClick={() => onNavigate('tracks', '#/tracks')}
                     className="text-xs font-bold text-sand-300 hover:text-sand-200 flex items-center gap-1"
                   >
-                    Explore Challenges &amp; Tech Stack <ArrowRight className="h-3 w-3" />
+                    View All Events <ArrowRight className="h-3 w-3" />
                   </button>
                 </div>
               </UniversityCard>
@@ -462,39 +448,6 @@ export default function HomePage({ onNavigate }) {
         </div>
         <div className="absolute inset-x-0 bottom-0">
           <TornEdge position="bottom" fill="#0B1B33" />
-        </div>
-      </section>
-
-      {/* ======================================================================
-          SPONSORS REEL
-      ====================================================================== */}
-      <section className="relative py-16 bg-navy-900">
-        <div className="wrap text-center">
-          <p className="font-mono text-xs uppercase tracking-widest text-sand-400">
-            Backed By National Industry Leaders &amp; Campus Chapters
-          </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-            {sponsorTiers[0].sponsors.concat(sponsorTiers[1].sponsors).map((s) => (
-              <div
-                key={s.name}
-                className="rounded-md border border-navy-700/70 bg-navy-850 px-5 py-3 text-sm font-display font-bold text-ivory shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-sand-400/70 hover:bg-navy-800"
-              >
-                {s.name}
-              </div>
-            ))}
-          </div>
-          <div className="mt-6">
-            <button
-              type="button"
-              onClick={() => onNavigate('sponsors', '#/sponsors')}
-              className="text-xs font-mono font-bold text-sand-300 hover:underline uppercase tracking-wider"
-            >
-              Become a Corporate Partner or View All Tiers →
-            </button>
-          </div>
-        </div>
-        <div className="absolute inset-x-0 bottom-0">
-          <TornEdge position="bottom" fill="#07101E" />
         </div>
       </section>
 
@@ -510,11 +463,11 @@ export default function HomePage({ onNavigate }) {
             Ready to Compete in Abbottabad?
           </h2>
           <p className="mt-3 text-sm text-ivory-muted leading-relaxed">
-            Whether you&apos;re building your first project or shipping your next startup, CITE&apos;26 is where you belong. Free entry for all degree students across Pakistan.
+            Whether you&apos;re building your first project or shipping your next startup, CITE&apos;26 is where you belong. Open to degree students across Pakistan.
           </p>
           <div className="mt-8 flex justify-center">
             <Button href={event.registrationUrl} target="_blank" rel="noopener noreferrer" size="lg">
-              Register Your Team (Free)
+              Register Your Team
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>

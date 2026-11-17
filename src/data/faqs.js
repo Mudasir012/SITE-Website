@@ -7,28 +7,16 @@ export const faqs = [
     a: 'Any student currently enrolled in a university, college, or degree-awarding institute anywhere in Pakistan can register. Teams of 2–4 members are welcome, and cross-university teams are encouraged. Individual entries for specific solo competitions are also supported.',
   },
   {
-    q: 'Is there a registration fee?',
-    a: 'No — registration is completely free. Because seats are limited to 800 participants across all competition categories, shortlisted teams will be confirmed over email after registration review.',
-  },
-  {
     q: 'Do I need a team before registering?',
-    a: 'Not at all. Solo participants can find teammates through our student community before the event, and we run a dedicated team-formation and mentor-matching session right after the opening ceremony.',
+    a: 'Not at all. Solo participants can find teammates through our student community before the event, and we run a dedicated team-formation session right after the opening ceremony.',
   },
   {
     q: 'What should I bring?',
-    a: 'Bring your laptop, chargers, any specialized hardware (if entering IoT/Embedded competitions), a valid student card or CNIC, and warm clothes for a full day on campus. We provide high-speed Wi-Fi, power backup, meals, snacks, and secure rest areas.',
-  },
-  {
-    q: 'Are meals and rest areas available for out-of-city participants?',
-    a: 'Yes. Lunch, dinner, tea, and snacks are provided throughout the day, along with secure rest and prayer areas on campus. Add your travel details during registration so our logistics team can issue your campus entry pass.',
+    a: 'Bring your laptop, chargers, any specialized hardware your event requires, a valid student card or CNIC, and warm clothes for a full day on campus.',
   },
   {
     q: 'Can I start building or coding before the event?',
     a: 'No. All project submissions, web platforms, and contest solutions must be developed during the competition window on the event day. You may use open-source libraries, public frameworks, and cloud APIs — pre-built project code is grounds for disqualification.',
-  },
-  {
-    q: 'Will hardware components be available on campus?',
-    a: 'We provide a limited pool of ESP32 and sensor kits for the IoT & Embedded Systems competition on a first-come, first-served basis. Teams are encouraged to bring their own microcontrollers and components.',
   },
   {
     q: 'How are the competitions evaluated and judged?',

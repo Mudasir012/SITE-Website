@@ -1,43 +1,18 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { GraduationCap, MapPin, Users, Wifi, Coffee, Car, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { GraduationCap, MapPin, Users, ArrowRight, CheckCircle2 } from 'lucide-react';
 import SectionHeading from '../components/SectionHeading.jsx';
 import Button from '../components/Button.jsx';
 import TornEdge from '../components/TornEdge.jsx';
 import PaperPlane from '../components/PaperPlane.jsx';
-import StickyNote from '../components/StickyNote.jsx';
 import UniversityCard from '../components/UniversityCard.jsx';
 import WashiTape from '../components/WashiTape.jsx';
 import { event } from '../data/event.js';
 
-const campusPerks = [
-  {
-    icon: Car,
-    title: 'Free On-Campus Parking',
-    description: 'Secure on-campus parking for participants traveling from across Pakistan.',
-  },
-  {
-    icon: Coffee,
-    title: 'Lunch, Dinner & Unlimited Chai',
-    description: 'Lunch, dinner, refreshments, and unlimited tea & coffee throughout the event day.',
-  },
-  {
-    icon: Wifi,
-    title: 'Gigabit Wi-Fi & CS Labs',
-    description: 'Continuous dual-redundant high-speed network, power backup, and modern workstation labs in the CS block.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'CUI ORIC Incubation Access',
-    description: 'Winners receive direct entry to CUI Abbottabad ORIC incubator and fast-track interview rounds.',
-  },
-];
-
 const checklistItems = [
   'Form a team of 2–4 builders (solo registrants get matched on the day)',
-  'Select a problem area in one of our 6 featured tracks',
+  'Pick an event from our 19-competition lineup',
   'Pack your laptop, chargers, and valid student ID card or CNIC',
-  'Check your confirmation email for travel details and your campus entry pass',
 ];
 
 export default function AboutPage({ onNavigate }) {
@@ -64,8 +39,8 @@ export default function AboutPage({ onNavigate }) {
             as="h1"
             motto="علم و ہنر کا سنگم — قومی شناخت"
             title="About CITE 2026"
-            subtitle="Where Ambition Meets Infrastructure at CUI Abbottabad"
-            description="CITE 2026 is COMSATS University Abbottabad’s flagship national student competition &amp; tech convention — organized by students, for students, and backed by the industry that hires them."
+            subtitle="Where Ambition Meets Opportunity at CUI Abbottabad"
+            description="CITE 2026 is COMSATS University Abbottabad’s flagship national student competition &amp; tech convention — organized by students, for students."
           />
         </div>
 
@@ -93,7 +68,7 @@ export default function AboutPage({ onNavigate }) {
               </p>
               <p className="mt-3">
                 Whether you are training your first machine learning model, competing in algorithmic challenges, or launching a civic startup, you will find
-                a category that fits, mentors who have shipped at scale, and a judging panel that inspects working solutions —
+                a category that fits and a judging panel that inspects working solutions —
                 not just pitch decks.
               </p>
             </UniversityCard>
@@ -114,32 +89,6 @@ export default function AboutPage({ onNavigate }) {
               </span>
             </div>
 
-            {/* Guaranteed Accommodations Grid */}
-            <div className="grid gap-4 sm:grid-cols-2 pt-4">
-              {campusPerks.map((perk, i) => {
-                const Icon = perk.icon;
-                return (
-                  <UniversityCard
-                    key={perk.title}
-                    variant="compact"
-                    label={`CAMPUS PERK · 0${i + 1}`}
-                    code="CUI / ABT"
-                    showCrest={false}
-                    className="h-full"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-[3px] border border-sand-400/30 bg-navy-750 text-sand-300">
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <h4 className="font-bold text-ivory text-xs sm:text-sm">{perk.title}</h4>
-                    </div>
-                    <p className="mt-2 text-xs text-ivory-muted leading-relaxed">
-                      {perk.description}
-                    </p>
-                  </UniversityCard>
-                );
-              })}
-            </div>
           </div>
 
           {/* Interactive Readiness Checklist + Sticky Note */}
@@ -240,15 +189,11 @@ export default function AboutPage({ onNavigate }) {
               </UniversityCard>
             </div>
 
-            {/* Campus Food & Warmth Sticky Note */}
-            <StickyNote title="Food & Warmth On Us" color="sand" rotate="-1deg">
-              We provide 6 authentic hot meals (including Chicken Biryani & Halwa Puri breakfast!), plus warm rest zones with prayer areas. All free of charge.
-            </StickyNote>
           </div>
         </div>
 
         {/* Stats Row */}
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="mt-16 grid grid-cols-2 md:grid-cols-3 gap-4">
           {event.stats.map(({ value, prefix = '', suffix = '', label }) => (
             <div
               key={label}

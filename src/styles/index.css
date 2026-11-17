@@ -70,16 +70,6 @@
     @apply mx-auto w-full max-w-content px-4 sm:px-6 lg:px-8;
   }
 
-  .marquee-track {
-    display: flex;
-    width: max-content;
-    animation: marquee-scroll 35s linear infinite;
-  }
-
-  .marquee-track:hover {
-    animation-play-state: paused;
-  }
-
   .academic-panel {
     position: relative;
     overflow: hidden;
@@ -139,22 +129,9 @@
   }
 }
 
-@keyframes marquee-scroll {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
-  }
-
-  .marquee-track {
-    animation: none !important;
   }
 
   *,

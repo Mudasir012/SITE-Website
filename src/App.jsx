@@ -7,16 +7,13 @@ import HomePage from './pages/HomePage.jsx';
 
 const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
 const TracksPage = lazy(() => import('./pages/TracksPage.jsx'));
-const PrizesPage = lazy(() => import('./pages/PrizesPage.jsx'));
 const SchedulePage = lazy(() => import('./pages/SchedulePage.jsx'));
-const JudgesPage = lazy(() => import('./pages/JudgesPage.jsx'));
-const SponsorsPage = lazy(() => import('./pages/SponsorsPage.jsx'));
 const FaqPage = lazy(() => import('./pages/FaqPage.jsx'));
 
 // Map hash to page id
 function getPageFromHash() {
   const hash = window.location.hash.replace('#/', '').replace('#', '').trim();
-  if (['about', 'tracks', 'prizes', 'schedule', 'judges', 'sponsors', 'faq'].includes(hash)) {
+  if (['about', 'tracks', 'schedule', 'faq'].includes(hash)) {
     return hash;
   }
   return 'home';
@@ -49,14 +46,8 @@ export default function App() {
         return <AboutPage onNavigate={handleNavigate} />;
       case 'tracks':
         return <TracksPage onNavigate={handleNavigate} />;
-      case 'prizes':
-        return <PrizesPage onNavigate={handleNavigate} />;
       case 'schedule':
         return <SchedulePage onNavigate={handleNavigate} />;
-      case 'judges':
-        return <JudgesPage onNavigate={handleNavigate} />;
-      case 'sponsors':
-        return <SponsorsPage onNavigate={handleNavigate} />;
       case 'faq':
         return <FaqPage onNavigate={handleNavigate} />;
       case 'home':

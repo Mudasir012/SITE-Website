@@ -135,7 +135,7 @@ export default function SchedulePage() {
         </ol>
 
         <p className="mt-10 text-center font-mono text-xs text-ivory-muted">
-          All timings in Pakistan Standard Time (PKT). Tea, snacks, and prayer areas are available throughout the day.
+          All timings in Pakistan Standard Time (PKT).
         </p>
       </div>
     </div>

@@ -3,23 +3,17 @@ import {
   ArrowUpRight,
   CalendarDays,
   CircleHelp,
-  Handshake,
   House,
   Info,
   Layers,
-  Trophy,
-  Users,
 } from 'lucide-react';
 import { event } from '../data/event.js';
 
 export const PAGES = [
   { id: 'home', label: 'Home', path: '#/', icon: House },
   { id: 'about', label: 'About', path: '#/about', icon: Info },
-  { id: 'tracks', label: 'Tracks', path: '#/tracks', icon: Layers },
-  { id: 'prizes', label: 'Prizes', path: '#/prizes', icon: Trophy },
+  { id: 'tracks', label: 'Events', path: '#/tracks', icon: Layers },
   { id: 'schedule', label: 'Schedule', path: '#/schedule', icon: CalendarDays },
-  { id: 'judges', label: 'Mentors', path: '#/judges', icon: Users },
-  { id: 'sponsors', label: 'Sponsors', path: '#/sponsors', icon: Handshake },
   { id: 'faq', label: 'FAQ', path: '#/faq', icon: CircleHelp },
 ];
 

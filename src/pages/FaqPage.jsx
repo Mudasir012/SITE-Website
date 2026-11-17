@@ -9,9 +9,8 @@ import { event } from '../data/event.js';
 
 const faqCategories = [
   { label: 'All Questions', filter: null },
-  { label: 'Eligibility & Teams', indices: [0, 1, 2] },
-  { label: 'Abbottabad Travel & Catering', indices: [3, 4] },
-  { label: 'Rules & Hardware', indices: [5, 6, 7] },
+  { label: 'Eligibility & Teams', indices: [0, 1] },
+  { label: 'Preparation & Rules', indices: [2, 3, 4] },
 ];
 
 export default function FaqPage() {
@@ -31,7 +30,7 @@ export default function FaqPage() {
           motto="سوالات و جوابات — معلوماتِ عامہ"
           title="Frequently Asked Questions"
           subtitle="Everything You Need to Know Before Registration"
-          description="Clear details on eligibility, out-of-city travel, free accommodation on campus, hardware allowances, and project evaluation."
+          description="Clear details on eligibility, teams, what to bring, competition rules, and project evaluation."
         />
 
         <div className="my-10 flex justify-center">
@@ -63,7 +62,7 @@ export default function FaqPage() {
             Still Have Inquiries?
           </h4>
           <p className="mt-1 text-xs leading-relaxed text-ivory-muted">
-            The student committee of CITE Society is available to answer all travel, team matching, and logistics questions.
+            The student committee of CITE Society is available to answer questions about registration, teams, and the competition.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs font-mono text-sand-300">

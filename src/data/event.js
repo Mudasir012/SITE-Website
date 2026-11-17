@@ -8,10 +8,10 @@ export const event = {
   durationLabel: 'One-Day National Hackathon',
 
   // ISO 8601 with timezone (+05:00 = Pakistan Standard Time).
-  startDate: '2026-12-18T09:00:00+05:00',
-  endDate: '2026-12-18T20:00:00+05:00',
+  startDate: '2026-12-12T09:00:00+05:00',
+  endDate: '2026-12-12T20:00:00+05:00',
 
-  dateLabel: 'December 18, 2026',
+  dateLabel: 'December 12, 2026',
   venue: 'COMSATS University Islamabad, Abbottabad Campus',
   venueShort: 'CUI Abbottabad Campus',
   city: 'Abbottabad, Pakistan',
@@ -36,7 +36,6 @@ export const event = {
     { value: 800, suffix: '+', label: 'Participants' },
     { value: 150, suffix: '+', label: 'Teams' },
     { value: 11, suffix: ' hrs', label: 'Full-Day Competition' },
-    { value: 600, prefix: 'PKR ', suffix: 'K+', label: 'Prize Pool' },
   ],
 
   university: {
@@ -59,24 +58,9 @@ export const event = {
         description: 'A HEC-recognized COMSATS campus nestled in the mountain foothills of Abbottabad.',
       },
       {
-        icon: 'FlaskConical',
-        title: 'CS Labs & Gigabit Network',
-        description: 'Dedicated workstation labs, power backup, and dual-redundant campus Wi-Fi.',
-      },
-      {
-        icon: 'Building2',
-        title: 'Auditorium, Dining & Campus Support',
-        description: 'A 500-seat auditorium, prayer areas, dining facilities, and secure rest areas across campus.',
-      },
-      {
         icon: 'Award',
         title: 'NCEAC-Accredited Programs',
         description: 'Computing degrees accredited by the National Computing Education Accreditation Council.',
-      },
-      {
-        icon: 'Network',
-        title: 'CUI ORIC Innovation Ecosystem',
-        description: 'Incubation, IP support, and industry linkage through the campus ORIC office.',
       },
     ],
   },

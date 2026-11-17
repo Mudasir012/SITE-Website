@@ -2,7 +2,12 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 
 function getRemaining(target) {
-  const diff = Math.max(0, new Date(target).getTime() - Date.now());
+  const targetTime = new Date(target).getTime();
+  if (!Number.isFinite(targetTime)) {
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, done: true };
+  }
+
+  const diff = Math.max(0, targetTime - Date.now());
   return {
     days: Math.floor(diff / 86_400_000),
     hours: Math.floor(diff / 3_600_000) % 24,
@@ -38,6 +43,7 @@ export default function Countdown({ target, doneLabel = 'Competitions are Live!'
   const isPaper = variant === 'paper';
 
   useEffect(() => {
+    setT(getRemaining(target));
     const id = setInterval(() => setT(getRemaining(target)), 1000);
     return () => clearInterval(id);
   }, [target]);

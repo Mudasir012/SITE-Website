@@ -1,5 +1,5 @@
 // Hand-drawn curly doodle arrow pointing to actions
-export default function DoodleArrow({ text = 'Free food & parking!', className = '' }) {
+export default function DoodleArrow({ text = 'See you in Abbottabad!', className = '' }) {
   return (
     <div className={`inline-flex items-center gap-2 font-serif italic text-sand-300 text-xs sm:text-sm select-none ${className}`}>
       <span>{text}</span>
