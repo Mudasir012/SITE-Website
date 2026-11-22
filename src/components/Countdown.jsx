@@ -17,11 +17,13 @@ function getRemaining(target) {
   };
 }
 
-function Digit({ value, className }) {
+function Digit({ value, className = '' }) {
   const reduced = useReducedMotion();
 
   return (
-    <span className="relative block h-[1em] overflow-hidden tabular-nums">
+    // Explicit width: the digit spans are absolutely positioned, so without
+    // this the wrapper collapses to ~0px and clips the number.
+    <span className="relative block h-[1em] w-[2.2ch] overflow-hidden tabular-nums">
       <AnimatePresence initial={false}>
         <motion.span
           key={value}
