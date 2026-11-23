@@ -6,6 +6,7 @@ import {
   House,
   Info,
   Layers,
+  ShieldCheck,
 } from 'lucide-react';
 import { event } from '../data/event.js';
 
@@ -100,6 +101,20 @@ export default function Dock({ activePage, setActivePage }) {
               );
             })}
           </ul>
+
+          <span aria-hidden="true" className="h-6 w-px bg-navy-700/80 mx-0.5" />
+
+          {/* Admin Portal Button */}
+          <button
+            type="button"
+            onClick={() => handleNavClick('admin', '#/admin')}
+            aria-label="Admin Portal"
+            className="button-shell group flex h-10 items-center gap-1.5 rounded-xl border border-gold-500/30 bg-navy-900/90 px-2 sm:px-2.5 font-mono text-[11px] font-bold uppercase tracking-wider text-gold-300 hover:bg-gold-400 hover:text-navy-950 transition-all active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
+            title="Open Admin Portal"
+          >
+            <ShieldCheck className="h-4 w-4 text-gold-400 group-hover:text-navy-950 transition-colors" />
+            <span className="hidden sm:inline">Admin</span>
+          </button>
 
           <span aria-hidden="true" className="hidden h-7 w-px bg-navy-700/80 lg:block" />
 

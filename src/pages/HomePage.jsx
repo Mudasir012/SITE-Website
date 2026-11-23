@@ -6,6 +6,7 @@ import {
   Landmark,
   MapPin,
   Users,
+  ShieldCheck,
 } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import CountUp from '../components/CountUp.jsx';
@@ -247,6 +248,15 @@ export default function HomePage({ onNavigate }) {
                 Explore Competitions &amp; Tracks
               </Button>
             </div>
+            
+            <button
+              type="button"
+              onClick={() => onNavigate('admin', '#/admin')}
+              className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono font-medium text-sand-300/70 hover:text-gold-300 bg-navy-950/50 hover:bg-navy-900 border border-sand-400/20 hover:border-gold-400/40 transition-all shadow-sm"
+            >
+              <ShieldCheck className="h-3.5 w-3.5 text-gold-400" />
+              <span>Organizer &amp; Admin Portal &rarr;</span>
+            </button>
           </motion.div>
 
           <motion.div variants={item} className="mt-10 flex justify-center opacity-70">

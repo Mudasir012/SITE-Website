@@ -75,6 +75,16 @@ export default function Footer({ onNavigate }) {
                 </button>
               </li>
             ))}
+            <li>
+              <button
+                type="button"
+                onClick={() => onNavigate('admin', '#/admin')}
+                className="text-sand-400/80 hover:text-sand-300 transition-colors uppercase font-bold flex items-center gap-1"
+              >
+                <span>Admin Portal</span>
+                <span className="text-[9px] bg-sand-400/20 px-1 py-0.2 rounded font-sans">Staff</span>
+              </button>
+            </li>
           </ul>
         </div>
 

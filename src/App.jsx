@@ -9,12 +9,13 @@ const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
 const TracksPage = lazy(() => import('./pages/TracksPage.jsx'));
 const SchedulePage = lazy(() => import('./pages/SchedulePage.jsx'));
 const FaqPage = lazy(() => import('./pages/FaqPage.jsx'));
+const AdminPortal = lazy(() => import('./pages/admin/AdminPortal.jsx'));
 
 // Map hash to page id
 function getPageFromHash() {
-  const hash = window.location.hash.replace('#/', '').replace('#', '').trim();
-  if (['about', 'tracks', 'schedule', 'faq'].includes(hash)) {
-    return hash;
+  const clean = window.location.hash.replace('#/', '').replace('#', '').trim().split('?')[0];
+  if (['about', 'tracks', 'schedule', 'faq', 'admin'].includes(clean)) {
+    return clean;
   }
   return 'home';
 }
@@ -40,6 +41,8 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const isAdmin = activePage === 'admin';
+
   const renderPage = () => {
     switch (activePage) {
       case 'about':
@@ -50,6 +53,8 @@ export default function App() {
         return <SchedulePage onNavigate={handleNavigate} />;
       case 'faq':
         return <FaqPage onNavigate={handleNavigate} />;
+      case 'admin':
+        return <AdminPortal onBackToSite={() => handleNavigate('home', '#/')} />;
       case 'home':
       default:
         return <HomePage onNavigate={handleNavigate} />;
@@ -62,14 +67,14 @@ export default function App() {
         <main className="flex-1">
           <AnimatePresence mode="wait" initial={false}>
             <PageTransition key={activePage}>
-              <Suspense fallback={<div className="min-h-[200vh]" aria-busy="true" />}>
+              <Suspense fallback={<div className="min-h-[100vh] flex items-center justify-center font-mono text-xs text-ivory/50" aria-busy="true">Loading CITE...</div>}>
                 {renderPage()}
               </Suspense>
             </PageTransition>
           </AnimatePresence>
         </main>
-        <Footer onNavigate={handleNavigate} />
-        <Dock activePage={activePage} setActivePage={setActivePage} />
+        {!isAdmin && <Footer onNavigate={handleNavigate} />}
+        {!isAdmin && <Dock activePage={activePage} setActivePage={setActivePage} />}
       </div>
     </MotionConfig>
   );
