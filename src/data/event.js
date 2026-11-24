@@ -19,7 +19,7 @@ export const event = {
   registrationUrl: 'https://forms.gle/replace-with-your-form',
 
   contact: {
-    email: 'cite.competition@cuiatd.edu.pk',
+    email: 'cite@cuiatd.edu.pk',
     phone: '+92 992 0000000',
     address: 'University Road, Tobe Camp, Abbottabad 22060, KP, Pakistan',
   },
