@@ -17,7 +17,7 @@ Requires Node.js 18+.
 
 - Hash-routed pages: Home, About, Events, Schedule, FAQ.
 - `src/App.jsx` owns hash routing, page transitions, and route-level lazy loading.
-- `src/sections/Dock.jsx` and `src/sections/Footer.jsx` are the only shared sections.
+- `src/sections/Navbar.jsx` and `src/sections/Footer.jsx` are the only shared sections.
 - `src/pages/` contains one file per route; `src/components/` contains reusable primitives and motion wrappers.
 - All editable content lives in `src/data/`.
 
@@ -35,13 +35,15 @@ The registration URL and contact details are still placeholders and are intentio
 
 ## Theme
 
-Colors are defined in `tailwind.config.js` as `navy`, `sand`, and `ivory` scales. A small set of global CSS custom properties in `src/styles/index.css` covers the canvas, focus ring, selection, and scrollbar. Paper/sticky-note palettes live in their components because they are material-specific.
+Colors are defined in `tailwind.config.js` as `navy`, `sand`, `ivory`, and `cite` scales; `cite` holds the blue/yellow/green/red sampled from the CITE emblem. A small set of global CSS custom properties in `src/styles/index.css` covers the canvas, focus ring, selection, and scrollbar. Paper/sticky-note palettes live in their components because they are material-specific.
 
-Fonts: Space Grotesk for display, Inter for UI text, Playfair Display for editorial subtitles, Noto Nastaliq Urdu for the motto, Caveat for handwritten notes, and JetBrains Mono for data labels.
+Fonts: Space Grotesk is the single voice for the hero, navbar, buttons, and headings. Inter, Playfair Display, Caveat, and JetBrains Mono remain only where an existing interior component needs them (body copy, handwritten notes, data labels). No Urdu font is loaded.
+
+The hero video is a placeholder at `public/hero-campus.mp4` with `public/hero-poster.jpg` as its poster; replace both with the final CITE reel before launch.
 
 ## Motion
 
-Motion is authored in Framer Motion: hero clip reveal, page transitions, a spring dock indicator, filter selection, countdown digit rolls, checklist feedback, and restrained scroll reveals. Every animated component has a `prefers-reduced-motion` branch.
+Motion is authored in Framer Motion: hero staggered reveal, page transitions, filter selection, countdown digit rolls, checklist feedback, and restrained scroll reveals. Every animated component has a `prefers-reduced-motion` branch; the hero video also stays paused for reduced-motion users.
 
 ## Before launch
 

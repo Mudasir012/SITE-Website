@@ -23,7 +23,7 @@ Pakistan's national-level, on-campus student competition: one full day, ~800 par
 
 - Event date December 12, 2026 at CUI Abbottabad Campus; registration via an external form (URL currently a placeholder).
 - Static marketing site, no backend; all content lives in `src/data/`.
-- Site architecture: 5 dedicated pages — Home, About, Events, Schedule, FAQ — sharing one floating bottom navigation dock and footer.
+- Site architecture: 5 dedicated pages — Home, About, Events, Schedule, FAQ — sharing one normal top navigation bar and footer.
 
 ## Capabilities and Constraints
 
@@ -33,8 +33,10 @@ Pakistan's national-level, on-campus student competition: one full day, ~800 par
 
 ## Brand Commitments
 
-- Host identity: CITE society, COMSATS University Islamabad, Abbottabad Campus. Blue-led identity.
-- **Owner-pinned visual constraints (binding):** light theme; solid pastel colors; absolutely no gradients, no glow effects, no blurred blob decorations, no grid/circuit background textures; professional tone.
+- Host identity: CITE society, COMSATS University Islamabad, Abbottabad Campus.
+- **Owner-pinned visual constraints (binding):** dark near-black theme; solid colors; absolutely no gradients, no glow effects, no blurred blob decorations, no grid/circuit background textures; modern, playful, professional tone.
+- One public type voice (Space Grotesk), no Urdu copy, compact black navbar with a plain white active underline, no color stripes, and a solid black video overlay on the Home hero only.
+- CITE emblem colors need not be carried literally; dark surfaces with selective violet/lime wayfinding accents are approved. `Register now` is the primary action on every public page.
 
 ## Evidence on Hand
 
@@ -45,7 +47,7 @@ Pakistan's national-level, on-campus student competition: one full day, ~800 par
 
 1. One audience, one job: help a student decide to register and find their event.
 2. Credibility is the product: specifics (dates, venues, numbers, named institutions) over hype.
-3. Restraint over effects: professional craft, solid color, honest layout — no decorative chrome.
+3. Authored motion over decoration: professional craft, solid color, honest layout, and a few purposeful 2D/3D moments — no generic chrome.
 4. One topic per page: depth and findability beat cramming everything into one scroll.
 
 ## Accessibility & Inclusion

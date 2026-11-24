@@ -1,442 +1,586 @@
-import { motion, useReducedMotion } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowRight,
-  ChevronRight,
-  GraduationCap,
-  Landmark,
-  MapPin,
-  Users,
-} from 'lucide-react';
-import Button from '../components/Button.jsx';
-import CountUp from '../components/CountUp.jsx';
-import CountdownNote from '../components/CountdownNote.jsx';
-import Reveal from '../components/Reveal.jsx';
-import TornEdge from '../components/TornEdge.jsx';
-import PaperPlane from '../components/PaperPlane.jsx';
-import StickyNote from '../components/StickyNote.jsx';
-import UniversityCard from '../components/UniversityCard.jsx';
-import EventCard from '../components/EventCard.jsx';
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+} from 'framer-motion';
+import { ArrowRight, ArrowUpRight, MapPin, Ticket } from 'lucide-react';
+import { Reveal, RevealHeading } from '../components/ScrollReveal.jsx';
 import { event } from '../data/event.js';
 import { events } from '../data/tracks.js';
+import { eventSchedule } from '../data/schedule.js';
 
-// ── Hand-drawn underline beneath the hero title ──
-function HandUnderline({ className = '' }) {
-  const reduced = useReducedMotion();
+const pad = (value) => String(value).padStart(2, '0');
+
+const featuredEvents = [events[0], events[9], events[4], events[2], events[10], events[14]].filter(Boolean);
+
+const dayMoments = [
+  eventSchedule.sessions.find((session) => session.title.startsWith('Registration')),
+  eventSchedule.sessions.find((session) => session.title.startsWith('Team Formation')),
+  eventSchedule.sessions.find((session) => session.title.startsWith('Competitions Officially')),
+  eventSchedule.sessions.find((session) => session.title.startsWith('Grand Finale')),
+].filter(Boolean);
+
+function useCountdown(target) {
+  const read = () => {
+    const targetTime = new Date(target).getTime();
+    if (!Number.isFinite(targetTime)) {
+      return { days: 0, hours: 0, minutes: 0, seconds: 0, done: true };
+    }
+    const diff = Math.max(0, targetTime - Date.now());
+    return {
+      days: Math.floor(diff / 86_400_000),
+      hours: Math.floor(diff / 3_600_000) % 24,
+      minutes: Math.floor(diff / 60_000) % 60,
+      seconds: Math.floor(diff / 1_000) % 60,
+      done: diff === 0,
+    };
+  };
+
+  const [remaining, setRemaining] = useState(read);
+
+  useEffect(() => {
+    setRemaining(read());
+    const id = setInterval(() => setRemaining(read()), 1000);
+    return () => clearInterval(id);
+  }, [target]);
+
+  return remaining;
+}
+
+function RouteRail() {
+  const { scrollYProgress } = useScroll();
+  const scaleY = useSpring(scrollYProgress, { stiffness: 110, damping: 28, mass: 0.3 });
 
   return (
-    <svg className={`w-full max-w-[420px] h-5 ${className}`} viewBox="0 0 420 20" preserveAspectRatio="none" fill="none">
-      <motion.path
-        d="M2,12 C40,2 80,18 120,10 C160,2 200,18 240,10 C280,2 320,18 360,10 C390,4 408,14 418,8"
-        stroke="#D4AF65"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        opacity="0.75"
-        initial={{ pathLength: reduced ? 1 : 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ delay: reduced ? 0 : 0.28, duration: reduced ? 0.12 : 0.62, ease: [0.16, 1, 0.3, 1] }}
-      />
-    </svg>
+    <div aria-hidden="true" className="pointer-events-none fixed bottom-10 left-7 top-28 z-40 hidden w-3 xl:block">
+      <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/10">
+        <motion.div style={{ scaleY }} className="h-full w-full origin-top bg-arcade-lime" />
+      </div>
+      {[0.18, 0.46, 0.74].map((point) => (
+        <span
+          key={point}
+          className="absolute left-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-arcade-lime bg-arcade-ink"
+          style={{ top: `${point * 100}%` }}
+        />
+      ))}
+    </div>
   );
 }
 
-// ── Marker / highlighter stroke beneath the date ──
-function MarkerUnderline({ children, className = '' }) {
+const ticketBase =
+  'group relative inline-flex items-center justify-center gap-3 bg-arcade-lime px-6 py-4 text-[11px] font-bold uppercase tracking-[0.18em] text-arcade-ink shadow-[0_18px_45px_-22px_rgba(0,0,0,0.95)] transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-bone focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-ink';
+
+function TicketLink({ href, children, className = '' }) {
   return (
-    <span className={`relative inline-block ${className}`}>
-      <span className="relative z-10">{children}</span>
-      <svg
-        aria-hidden="true"
-        className="absolute left-0 -bottom-1.5 h-3 w-full pointer-events-none"
-        viewBox="0 0 300 14"
-        preserveAspectRatio="none"
-        fill="none"
+    <a href={href} target="_blank" rel="noopener noreferrer" className={`${ticketBase} ${className}`}>
+      <span aria-hidden="true" className="absolute -left-1 top-1/2 h-5 w-2 -translate-y-1/2 rounded-full bg-arcade-ink" />
+      <span>{children}</span>
+      <ArrowUpRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
+    </a>
+  );
+}
+
+function HeroPass() {
+  const reduced = useReducedMotion();
+  const pointerX = useMotionValue(0);
+  const pointerY = useMotionValue(0);
+  const rotateX = useSpring(useTransform(pointerY, [-0.5, 0.5], [11, -11]), { stiffness: 170, damping: 18 });
+  const rotateY = useSpring(useTransform(pointerX, [-0.5, 0.5], [-17, 17]), { stiffness: 170, damping: 18 });
+
+  const handleMove = (event) => {
+    if (reduced) return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    pointerX.set((event.clientX - bounds.left) / bounds.width - 0.5);
+    pointerY.set((event.clientY - bounds.top) / bounds.height - 0.5);
+  };
+
+  const reset = () => {
+    pointerX.set(0);
+    pointerY.set(0);
+  };
+
+  return (
+    <div
+      onPointerMove={handleMove}
+      onPointerLeave={reset}
+      className="relative hidden h-[500px] w-[350px] shrink-0 [perspective:1200px] lg:block"
+    >
+      <motion.div
+        animate={reduced ? undefined : { y: [0, -14, 0] }}
+        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+        className="h-full w-full"
       >
-        <path
-          d="M3 9.5 C52 5 104 11.5 156 8 S252 5 297 9"
-          stroke="#D4AF65"
-          strokeWidth="5"
-          strokeLinecap="round"
-          opacity="0.55"
-        />
-        <path
-          d="M8 11 C60 7.5 108 13 162 10 S256 7.5 292 11"
-          stroke="#E5D6BA"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          opacity="0.5"
-        />
-      </svg>
-    </span>
-  );
-}
-
-const universityIcons = {
-  GraduationCap,
-  Landmark,
-};
-
-export default function HomePage({ onNavigate }) {
-  const reduced = useReducedMotion();
-  const item = reduced
-    ? { hidden: { opacity: 1 }, show: { opacity: 1 } }
-    : { hidden: { opacity: 0, y: 18 }, show: { opacity: 1, y: 0, transition: { duration: 0.52, ease: [0.16, 1, 0.3, 1] } } };
-
-  return (
-    <div className="pb-24">
-      {/* ======================================================================
-          HERO — Bulletin-board / Campus Noticeboard vibe
-          Navy canvas with subtle ruled notebook lines, cork-texture overlay,
-          dramatic ghost watermark, thumbtack, hand-drawn underline, marker date.
-      ====================================================================== */}
-      <section className="relative overflow-hidden pt-14 pb-24 sm:pt-20 sm:pb-32 md:pt-24 md:pb-40 bg-[#101F38]">
-
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-          <picture className="block h-full w-full">
-            <source srcSet="/Hero%20Backgroound.webp" type="image/webp" />
-            <img
-              src="/Hero%20Backgroound.jpg"
-              alt=""
-              width="1600"
-              height="844"
-              className="h-full w-full object-cover object-center opacity-25"
-              loading="eager"
-              decoding="async"
-            />
-          </picture>
-          <div className="absolute inset-0 bg-[#101F38]/25" />
-        </div>
-
-        {/* ── Subtle notebook-ruled lines background ── */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-0 opacity-[0.04]"
-          style={{
-            backgroundImage: 'repeating-linear-gradient(to bottom, transparent 0px, transparent 31px, #E5D6BA 31px, #E5D6BA 32px)',
-          }}
-        />
-
-        {/* ── Cork/bulletin board texture vignette ── */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-0"
-          style={{
-            background: 'radial-gradient(ellipse 80% 60% at 50% 50%, transparent 55%, rgba(7,16,30,0.5) 100%)',
-          }}
-        />
-
-        {/* ── Scattered decorative doodle stars ── */}
-        {[
-          { top: '12%', left: '8%',  size: 18, rot: 15,  op: 0.25 },
-          { top: '20%', left: '88%', size: 14, rot: -20, op: 0.20 },
-          { top: '65%', left: '5%',  size: 10, rot: 30,  op: 0.18 },
-          { top: '75%', left: '90%', size: 16, rot: -10, op: 0.22 },
-          { top: '40%', left: '93%', size: 12, rot: 45,  op: 0.17 },
-        ].map((s, i) => (
-          <svg
-            key={i}
-            aria-hidden="true"
-            className="pointer-events-none absolute z-0"
-            style={{ top: s.top, left: s.left, width: s.size, height: s.size, opacity: s.op, transform: `rotate(${s.rot}deg)` }}
-            viewBox="0 0 24 24"
-            fill="#E5D6BA"
+        <motion.div style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }} className="relative h-full w-full">
+          <div
+            className="absolute inset-0 border border-white/15 bg-arcade-coal shadow-[0_45px_90px_-40px_rgba(0,0,0,0.95)]"
+            style={{ transform: 'translateZ(0px)' }}
+          />
+          <div
+            className="absolute inset-x-0 top-0 flex h-20 items-center justify-between border-b border-black/30 bg-arcade-lime py-0 pl-5 pr-20 text-arcade-ink"
+            style={{ transform: 'translateZ(18px)' }}
           >
-            <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" />
-          </svg>
-        ))}
-
-        {/* ── Paper plane soaring across top-right ── */}
-        <div className="absolute right-6 sm:right-16 md:right-28 top-20 sm:top-24 z-20 hidden sm:block">
-          <PaperPlane size="lg" />
-        </div>
-
-        {/* ── Second small paper plane bottom-left ── */}
-        <div
-          className="absolute left-6 sm:left-14 bottom-28 z-20 hidden md:block"
-          style={{ transform: 'rotate(180deg) scaleX(-1)' }}
-        >
-          <PaperPlane size="sm" flightTrail={false} />
-        </div>
-
-        <motion.div
-          className="wrap relative z-10 text-center"
-          initial="hidden"
-          animate="show"
-          variants={{ hidden: {}, show: { transition: { staggerChildren: reduced ? 0 : 0.09, delayChildren: 0.04 } } }}
-        >
-          <motion.div variants={item}>
-            <p className="font-nastaliq text-2xl sm:text-3xl md:text-4xl text-sand-400 mb-3 leading-loose drop-shadow-sm">
-              تعمیرِ نو کی ایک نئی پرواز
+            <span className="grid h-11 w-11 place-items-center bg-arcade-ink">
+              <img
+                src="/CITE_White_Icon_Only.png"
+                alt=""
+                width="32"
+                height="32"
+                loading="lazy"
+                decoding="async"
+                className="h-8 w-8 object-contain"
+              />
+            </span>
+            <span className="font-display text-[10px] font-bold uppercase tracking-[0.22em]">Student pass</span>
+          </div>
+          <div className="absolute inset-x-6 top-28 h-px bg-white/15" style={{ transform: 'translateZ(30px)' }} />
+          <div className="absolute inset-x-6 top-36" style={{ transform: 'translateZ(38px)' }}>
+            <p className="font-display text-[10px] font-bold uppercase tracking-[0.24em] text-arcade-lime">Admit one</p>
+            <p className="mt-3 font-display text-4xl font-bold uppercase leading-[0.94] tracking-[-0.05em] text-arcade-bone">
+              One day.
+              <br />
+              Nineteen
+              <br />
+              chances.
             </p>
-          </motion.div>
-
-          <motion.div variants={item} className="relative inline-block">
-            <motion.h1
-              className="font-display font-black uppercase tracking-tight text-sand-100 leading-[0.92]"
-              style={{ fontSize: 'clamp(3.8rem, 12vw, 8.5rem)' }}
-              initial={reduced ? { opacity: 0 } : { opacity: 0, clipPath: 'inset(0 0 100% 0)', y: 26 }}
-              animate={{ opacity: 1, clipPath: 'inset(0 0 0% 0)', y: 0 }}
-              transition={{ delay: reduced ? 0.1 : 0.12, duration: reduced ? 0.2 : 0.62, ease: [0.16, 1, 0.3, 1] }}
-            >
-              CITE<span className="text-sand-400">'26</span>
-            </motion.h1>
-            <div className="mt-1 flex justify-center">
-              <HandUnderline />
+          </div>
+          <div className="absolute inset-x-6 top-[310px] flex items-center justify-between border-t border-white/15 pt-4" style={{ transform: 'translateZ(34px)' }}>
+            <div>
+              <p className="font-display text-[10px] font-bold uppercase tracking-[0.22em] text-arcade-mute">Date</p>
+              <p className="mt-1 font-display text-sm font-bold uppercase text-arcade-bone">12 Dec 2026</p>
             </div>
-          </motion.div>
-
-          <motion.div variants={item}>
-            <p className="mt-5 font-serif italic text-lg sm:text-xl md:text-2xl text-sand-300 font-normal max-w-2xl mx-auto leading-snug">
-              COMSATS University Abbottabad&apos;s flagship national tech &amp; engineering convention
-            </p>
-          </motion.div>
-
-          <motion.div variants={item} className="mt-8 inline-block">
-            <MarkerUnderline>
-              <span className="block font-display text-2xl sm:text-3xl md:text-[2.4rem] font-extrabold tracking-widest text-sand-100 px-4">
-                12 DECEMBER 2026
-              </span>
-            </MarkerUnderline>
-            <p className="mt-3 font-mono text-xs sm:text-sm text-sand-300/80 font-medium">
-              COMSATS University Islamabad, Abbottabad Campus
-            </p>
-          </motion.div>
-
-          <motion.div variants={item} className="mt-10 flex flex-col items-center justify-center">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
-              <Button
-                href={event.registrationUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                size="lg"
-                className="w-full sm:w-auto"
-              >
-                Register Now
-                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
-              </Button>
-              <Button
-                onClick={() => onNavigate('tracks', '#/tracks')}
-                variant="secondary"
-                size="lg"
-                className="w-full sm:w-auto"
-              >
-                Explore Competitions &amp; Tracks
-              </Button>
+            <div className="text-right">
+              <p className="font-display text-[10px] font-bold uppercase tracking-[0.22em] text-arcade-mute">Venue</p>
+              <p className="mt-1 font-display text-sm font-bold uppercase text-arcade-bone">CUI Abbottabad</p>
             </div>
-          </motion.div>
-
-          <motion.div variants={item} className="mt-10 flex justify-center opacity-70">
-            <svg className="h-7 w-16 text-sand-400/50" viewBox="0 0 100 40" fill="currentColor" aria-hidden="true">
-              <path d="M50 0 C45 10 40 20 20 25 C40 25 45 35 50 40 C55 35 60 25 80 25 C60 20 55 10 50 0 Z" />
-              <circle cx="50" cy="20" r="3" fill="#D4AF65" />
-              <circle cx="35" cy="23" r="2" fill="#D4AF65" />
-              <circle cx="65" cy="23" r="2" fill="#D4AF65" />
-            </svg>
-          </motion.div>
-        </motion.div>
-
-        {/* Torn paper edge */}
-        <div className="absolute inset-x-0 bottom-0">
-          <TornEdge position="bottom" fill="#07101E" />
-        </div>
-      </section>
-
-      {/* ======================================================================
-          QUICK STATS RIBBON
-      ====================================================================== */}
-      <section className="relative bg-navy-950 py-10">
-        <div className="wrap">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
-            {event.stats.map(({ value, prefix = '', suffix = '', label }) => (
-              <div key={label} className="p-3">
-                <p className="font-display text-2xl sm:text-3xl lg:text-4xl font-black text-sand-300">
-                  <CountUp end={value} prefix={prefix} suffix={suffix} />
-                </p>
-                <p className="mt-1 font-mono text-[11px] sm:text-xs uppercase tracking-wider text-ivory-muted">
-                  {label}
-                </p>
-              </div>
+          </div>
+          <div className="absolute inset-x-6 bottom-6 flex h-9 items-end gap-[3px]" style={{ transform: 'translateZ(42px)' }} aria-hidden="true">
+            {[3, 1, 2, 4, 1, 3, 2, 1, 4, 2, 3, 1, 2, 4, 1, 3, 2, 1, 4, 2, 3].map((width, index) => (
+              <span key={index} className="h-full bg-arcade-bone/80" style={{ width }} />
             ))}
           </div>
-        </div>
-        <div className="absolute inset-x-0 bottom-0">
-          <TornEdge position="bottom" fill="#0E2342" />
-        </div>
-      </section>
-
-      {/* ======================================================================
-          HOST UNIVERSITY
-      ====================================================================== */}
-      <section className="relative py-16 sm:py-24 bg-navy-850">
-        <div className="wrap">
-          <div className="grid gap-8 lg:grid-cols-12 items-stretch">
-            {/* University identity card */}
-            <UniversityCard
-              tone="paper"
-              label="UNIVERSITY FILE"
-              code="CUI / ABT · 2001"
-              className="lg:col-span-5"
-              ruled
-            >
-              <h2 className="font-display text-2xl sm:text-3xl font-bold uppercase tracking-tight text-navy-950 leading-tight">
-                COMSATS University Islamabad
-              </h2>
-              <p className="mt-1 font-serif italic text-lg text-navy-800">Abbottabad Campus</p>
-
-              <p className="mt-4 text-sm text-navy-800/80 leading-relaxed">
-                Set in the mountain foothills of Abbottabad, the campus brings together the
-                Department of Computer Science, the CITE Society, and a thriving student
-                innovation ecosystem — the home ground for CITE&apos;26.
-              </p>
-
-              <div className="mt-5 flex flex-wrap gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-navy-800/25 bg-navy-900/[0.04] px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider text-navy-800">
-                  <MapPin className="h-3.5 w-3.5" />
-                  Abbottabad, KP
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-navy-800/25 bg-navy-900/[0.04] px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider text-navy-800">
-                  <Landmark className="h-3.5 w-3.5" />
-                  Est. {event.university.established}
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-navy-800/25 bg-navy-900/[0.04] px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider text-navy-800">
-                  <Users className="h-3.5 w-3.5" />
-                  40+ Universities
-                </span>
-              </div>
-
-              <div className="mt-6 border-t border-navy-800/15 pt-4">
-                <button
-                  type="button"
-                  onClick={() => onNavigate('about', '#/about')}
-                  className="inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wider text-navy-900 hover:text-navy-700 transition-colors"
-                >
-                  <span>Read the campus story</span>
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            </UniversityCard>
-
-            {/* Campus facts grid */}
-            <div className="lg:col-span-7 grid gap-4 sm:grid-cols-2">
-              {event.university.facts.map((fact, i) => {
-                const Icon = universityIcons[fact.icon] || GraduationCap;
-                return (
-                  <UniversityCard
-                    key={fact.title}
-                    variant="compact"
-                    label={`CAMPUS FILE · 0${i + 1}`}
-                    code="CUI / ABT"
-                    showCrest={false}
-                    className="h-full"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-[3px] border border-sand-400/30 bg-navy-750 text-sand-300">
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <h3 className="font-display text-sm font-bold text-ivory">{fact.title}</h3>
-                    </div>
-                    <p className="mt-2 text-xs text-ivory-muted leading-relaxed">
-                      {fact.description}
-                    </p>
-                  </UniversityCard>
-                );
-              })}
-            </div>
+          <div
+            className="absolute right-0 top-0 grid h-16 w-16 place-items-center border-b border-l border-arcade-lime/40 bg-arcade-ink text-arcade-bone"
+            style={{ transform: 'translateZ(46px)' }}
+          >
+            <Ticket className="h-5 w-5" aria-hidden="true" />
           </div>
-        </div>
-        <div className="absolute inset-x-0 bottom-0">
-          <TornEdge position="bottom" fill="#0B1B33" />
-        </div>
-      </section>
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+}
 
-      {/* ======================================================================
-          COUNTDOWN & STICKY NOTES
-      ====================================================================== */}
-      <section className="relative py-16 sm:py-24 bg-navy-900">
-        <div className="wrap max-w-5xl">
-          <div className="grid gap-8 lg:grid-cols-12 items-center">
-            <div className="relative lg:col-span-8">
-              <CountdownNote />
-            </div>
+function CountdownStrip() {
+  const remaining = useCountdown(event.startDate);
+  const units = [
+    { label: 'Days', value: remaining.days },
+    { label: 'Hours', value: remaining.hours },
+    { label: 'Minutes', value: remaining.minutes },
+    { label: 'Seconds', value: remaining.seconds },
+  ];
 
-            {/* Sticky notes column */}
-            <div className="lg:col-span-4 space-y-6">
-              <StickyNote title="Campus Packing Tip" color="sand" rotate="2.5deg">
-                Abbottabad in December is chilly! Pack warm hoodies and jackets.
-              </StickyNote>
-              <StickyNote title="Coming Solo?" color="blue" rotate="-3deg">
-                No squad? No worries! Over 30% of participants register solo. We run an on-campus team-formation session right after the keynote.
-              </StickyNote>
-              <StickyNote title="Pro Tip 🎯" color="green" rotate="1.5deg">
-                Attend every workshop — they are built to help you sharpen your project.
-              </StickyNote>
-            </div>
+  if (remaining.done) {
+    return (
+      <div role="status" className="inline-flex items-center gap-3 border border-arcade-limeHot/40 bg-arcade-limeHot/10 px-5 py-3">
+        <span className="h-2 w-2 rotate-45 bg-arcade-limeHot" aria-hidden="true" />
+        <span className="font-display text-xs font-bold uppercase tracking-[0.2em] text-arcade-limeHot">Competitions are live</span>
+      </div>
+    );
+  }
+
+  return (
+    <div role="timer" aria-label="Countdown to CITE 2026" className="grid max-w-lg grid-cols-4 gap-3 sm:gap-5">
+      {units.map(({ label, value }) => (
+        <div key={label} className="border-t border-white/20 pt-3">
+          <span className="block font-display text-3xl font-bold tabular-nums tracking-[-0.04em] text-arcade-bone sm:text-4xl">
+            {pad(value)}
+          </span>
+          <span className="mt-1 block font-display text-[10px] font-bold uppercase tracking-[0.2em] text-arcade-mute">
+            {label}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DayRoute({ onNavigate }) {
+  const reduced = useReducedMotion();
+
+  return (
+    <section className="bg-arcade-coal py-24 sm:py-32">
+      <div className="wrap grid gap-14 lg:grid-cols-12 lg:gap-16">
+        <div className="lg:col-span-6">
+          <RevealHeading
+            lines={[
+              { text: 'One day.' },
+              { text: 'Nineteen ways', accent: true },
+              { text: 'to win.' },
+            ]}
+            className="font-display font-bold uppercase leading-[0.9] tracking-[-0.05em] text-arcade-bone"
+            style={{ fontSize: 'clamp(2.8rem, 6vw, 5.5rem)' }}
+          />
+          <Reveal className="mt-7 max-w-xl font-display text-base leading-relaxed text-arcade-mute sm:text-lg" delay={0.12}>
+            Check in at eight, form a team, choose an arena, and ship something real before the
+            final showcase at six. Every hour has a purpose.
+          </Reveal>
+          <Reveal className="mt-10" delay={0.2}>
+            <CountdownStrip />
+          </Reveal>
+        </div>
+
+        <div className="lg:col-span-6">
+          <div className="relative border-l border-white/15 pl-8 sm:pl-10">
+            {dayMoments.map((moment, index) => (
+              <motion.div
+                key={moment.time}
+                initial={reduced ? undefined : { opacity: 0, x: 20 }}
+                whileInView={reduced ? undefined : { opacity: 1, x: 0 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ duration: 0.5, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
+                className="relative pb-10 last:pb-0"
+              >
+                <span
+                  aria-hidden="true"
+                  className="absolute -left-[41px] top-1.5 h-3 w-3 rotate-45 border border-arcade-lime bg-arcade-coal sm:-left-[49px]"
+                />
+                <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
+                  <span className="font-display text-2xl font-bold tabular-nums tracking-[-0.03em] text-arcade-lime sm:text-3xl">
+                    {moment.time}
+                  </span>
+                  <h3 className="font-display text-base font-bold uppercase tracking-[-0.01em] text-arcade-bone sm:text-lg">
+                    {moment.title}
+                  </h3>
+                </div>
+                <p className="mt-1 font-display text-sm text-arcade-mute">{moment.location}</p>
+              </motion.div>
+            ))}
           </div>
+          <button
+            type="button"
+            onClick={() => onNavigate('schedule', '#/schedule')}
+            className="mt-10 inline-flex items-center gap-2 border-b border-arcade-lime pb-1 font-display text-xs font-bold uppercase tracking-[0.18em] text-arcade-bone transition-colors hover:text-arcade-lime focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-lime focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-coal"
+          >
+            See the full schedule
+            <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+          </button>
         </div>
-        <div className="absolute inset-x-0 bottom-0">
-          <TornEdge position="bottom" fill="#0E2342" />
-        </div>
-      </section>
+      </div>
+    </section>
+  );
+}
 
-      {/* ======================================================================
-          TRACKS PREVIEW
-      ====================================================================== */}
-      <section className="relative py-16 sm:py-24 bg-navy-850">
-        <div className="wrap">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
-            <div>
-              <span className="font-mono text-xs font-bold uppercase tracking-widest text-sand-400">Competitions &amp; Challenges</span>
-              <h2 className="mt-2 font-display text-2xl sm:text-4xl font-bold uppercase tracking-tight text-ivory">Featured Events</h2>
-              <p className="mt-1 text-sm text-ivory-muted">19 competitions across two arenas — coding, design, gaming, and more.</p>
-            </div>
+const arenaTileClasses = [
+  'sm:col-span-1 lg:col-span-7 lg:-rotate-2',
+  'sm:col-span-1 lg:col-span-5 lg:mt-12 lg:rotate-2',
+  'sm:col-span-1 lg:col-span-5 lg:-mt-6 lg:rotate-2',
+  'sm:col-span-1 lg:col-span-7 lg:mt-6 lg:-rotate-1',
+  'sm:col-span-1 lg:col-span-7 lg:rotate-1',
+  'sm:col-span-1 lg:col-span-5 lg:mt-10 lg:-rotate-2',
+];
+
+function ArenaSection({ onNavigate }) {
+  const reduced = useReducedMotion();
+
+  return (
+    <section className="overflow-hidden bg-arcade-ink py-24 sm:py-32">
+      <div className="wrap">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <RevealHeading
+            lines={[{ text: 'Choose your arena.' }]}
+            className="font-display font-bold uppercase leading-[0.9] tracking-[-0.05em] text-arcade-bone"
+            style={{ fontSize: 'clamp(2.8rem, 6vw, 5.5rem)' }}
+          />
+          <Reveal delay={0.12}>
             <button
               type="button"
               onClick={() => onNavigate('tracks', '#/tracks')}
-              className="inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wider text-sand-300 hover:text-white transition-colors"
+              className="inline-flex items-center gap-2 self-start border-b border-arcade-lime pb-1 font-display text-xs font-bold uppercase tracking-[0.18em] text-arcade-bone transition-colors hover:text-arcade-lime focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-lime focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-ink lg:self-auto"
             >
-              <span>View All 19 Events</span>
-              <ChevronRight className="h-4 w-4" />
+              View all 19 events
+              <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
             </button>
-          </div>
+          </Reveal>
+        </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {events.slice(0, 6).map((item, i) => (
-              <EventCard
-                key={item.name}
-                event={item}
-                index={i}
-                onNavigate={() => onNavigate('tracks', '#/tracks')}
-                actionLabel="View all events"
-              />
+        <div className="mt-14 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-12 [perspective:1200px]">
+          {featuredEvents.map((item, index) => (
+            <motion.button
+              key={item.name}
+              type="button"
+              onClick={() => onNavigate('tracks', '#/tracks')}
+              whileHover={reduced ? undefined : { rotateY: 5, rotateX: -4, y: -8 }}
+              transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+              style={{ transformStyle: 'preserve-3d' }}
+              className={`group relative col-span-1 min-h-[230px] overflow-hidden border border-white/10 bg-arcade-coal text-left shadow-[0_28px_60px_-34px_rgba(0,0,0,0.95)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-lime focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-ink sm:min-h-[280px] lg:min-h-[320px] ${arenaTileClasses[index]}`}
+            >
+              <motion.div
+                initial={reduced ? undefined : { clipPath: 'inset(14% 0 0 0)' }}
+                whileInView={reduced ? undefined : { clipPath: 'inset(0% 0 0 0)' }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.75, delay: (index % 2) * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute inset-0"
+              >
+                <img
+                  src={item.image}
+                  alt=""
+                  loading="lazy"
+                  className="h-full w-full object-cover opacity-65 transition-transform duration-500 group-hover:scale-105"
+                />
+              </motion.div>
+              <span aria-hidden="true" className="absolute inset-0 bg-arcade-ink/35" />
+              <span className="relative flex h-full min-h-[230px] flex-col justify-between p-4 sm:min-h-[280px] sm:p-5 lg:min-h-[320px]" style={{ transform: 'translateZ(28px)' }}>
+                <span
+                  className={`inline-flex w-fit px-2.5 py-1 font-display text-[9px] font-bold uppercase tracking-[0.18em] ${
+                    item.code === 'A' ? 'bg-arcade-violet text-white' : 'bg-arcade-limeHot text-arcade-ink'
+                  }`}
+                >
+                  {item.code === 'A' ? 'Computer science' : 'Fun & esports'}
+                </span>
+                <span>
+                  <span className="block font-display text-xl font-bold uppercase leading-[0.95] tracking-[-0.04em] text-arcade-bone sm:text-2xl">
+                    {item.name}
+                  </span>
+                  <span className="mt-3 inline-flex items-center gap-1.5 font-display text-[10px] font-bold uppercase tracking-[0.18em] text-arcade-bone/70 transition-colors group-hover:text-arcade-lime">
+                    Explore event
+                    <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+                  </span>
+                </span>
+              </span>
+            </motion.button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CampusSection({ onNavigate }) {
+  const reduced = useReducedMotion();
+  const sectionRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start end', 'end start'] });
+  const fold = useTransform(scrollYProgress, [0, 0.5, 1], [-14, 0, 9]);
+  const accents = ['bg-arcade-lime', 'bg-arcade-violet', 'bg-arcade-limeHot'];
+
+  return (
+    <section ref={sectionRef} className="bg-arcade-coal py-24 sm:py-32">
+      <div className="wrap grid gap-12 lg:grid-cols-12 lg:gap-16">
+        <div className="lg:col-span-5">
+          <RevealHeading
+            lines={[{ text: 'Built on a real campus.' }]}
+            className="font-display font-bold uppercase leading-[0.9] tracking-[-0.05em] text-arcade-bone"
+            style={{ fontSize: 'clamp(2.8rem, 5.5vw, 4.8rem)' }}
+          />
+          <Reveal className="mt-7 max-w-lg font-display text-base leading-relaxed text-arcade-mute sm:text-lg" delay={0.1}>
+            {event.university.name}, {event.university.campus}. A computing department, a
+            student society, and a whole campus turned into a one-day competition venue.
+          </Reveal>
+          <Reveal className="mt-4" delay={0.16}>
+            <p className="inline-flex items-center gap-2 font-display text-sm font-bold uppercase tracking-[0.12em] text-arcade-bone/80">
+              <MapPin className="h-4 w-4 text-arcade-lime" aria-hidden="true" />
+              {event.city}
+            </p>
+          </Reveal>
+          <Reveal delay={0.22}>
+            <button
+              type="button"
+              onClick={() => onNavigate('about', '#/about')}
+              className="mt-9 inline-flex items-center gap-2 border-b border-arcade-lime pb-1 font-display text-xs font-bold uppercase tracking-[0.18em] text-arcade-bone transition-colors hover:text-arcade-lime focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-lime focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-coal"
+            >
+              Read the campus story
+              <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </Reveal>
+        </div>
+
+        <div className="lg:col-span-7 [perspective:1200px]">
+          <motion.div
+            style={reduced ? undefined : { rotateX: fold, transformStyle: 'preserve-3d' }}
+            className="grid gap-4 sm:grid-cols-3"
+          >
+            {event.university.facts.map((fact, index) => (
+              <div
+                key={fact.title}
+                className="relative flex min-h-[250px] flex-col border border-white/10 bg-arcade-ink p-5 shadow-[0_24px_55px_-30px_rgba(0,0,0,0.95)]"
+                style={reduced ? undefined : { transform: `translateZ(${index * 20}px)` }}
+              >
+                <span aria-hidden="true" className={`h-1.5 w-10 ${accents[index % accents.length]}`} />
+                <h3 className="mt-6 font-display text-lg font-bold uppercase leading-tight tracking-[-0.03em] text-arcade-bone">
+                  {fact.title}
+                </h3>
+                <p className="mt-3 font-display text-sm leading-relaxed text-arcade-mute">{fact.description}</p>
+              </div>
             ))}
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ClosingCTA() {
+  return (
+    <section className="bg-arcade-ink py-24 sm:py-32">
+      <div className="wrap">
+        <div className="relative border border-white/10 bg-arcade-coal p-7 sm:p-12">
+          <span aria-hidden="true" className="absolute -right-5 -top-5 h-20 w-20 rotate-12 bg-arcade-lime" />
+          <div className="grid gap-10 lg:grid-cols-[1fr_350px] lg:items-center">
+            <div>
+              <RevealHeading
+                lines={[{ text: 'Ready' }, { text: 'to enter?' }]}
+                className="font-display font-bold uppercase leading-[0.86] tracking-[-0.05em] text-arcade-bone"
+                style={{ fontSize: 'clamp(3rem, 8vw, 6rem)' }}
+              />
+              <Reveal className="mt-10 flex flex-col gap-7 sm:flex-row sm:items-end sm:justify-between" delay={0.12}>
+                <div>
+                  <p className="font-display text-sm font-bold uppercase tracking-[0.16em] text-arcade-lime">
+                    12 December 2026 · {event.venueShort}
+                  </p>
+                  <p className="mt-2 max-w-md font-display text-sm leading-relaxed text-arcade-mute">
+                    Open to degree students across Pakistan. Bring a team or find one on campus.
+                  </p>
+                </div>
+                <TicketLink href={event.registrationUrl} className="shrink-0">
+                  Register now
+                </TicketLink>
+              </Reveal>
+            </div>
+
+            <div className="flex justify-center lg:justify-end">
+              <HeroPass />
+            </div>
           </div>
         </div>
-        <div className="absolute inset-x-0 bottom-0">
-          <TornEdge position="bottom" fill="#0B1B33" />
-        </div>
+      </div>
+    </section>
+  );
+}
+
+export default function HomePage({ onNavigate }) {
+  const reduced = useReducedMotion();
+  const { scrollY } = useScroll();
+  const heroVideoY = useTransform(scrollY, [0, 700], [0, 60]);
+  const heroCopyY = useTransform(scrollY, [0, 600], [0, -48]);
+  const heroCopyOpacity = useTransform(scrollY, [0, 450], [1, 0.4]);
+  const item = reduced
+    ? { hidden: { opacity: 1 }, show: { opacity: 1 } }
+    : {
+        hidden: { opacity: 0, y: 22 },
+        show: { opacity: 1, y: 0, transition: { duration: 0.62, ease: [0.16, 1, 0.3, 1] } },
+      };
+
+  return (
+    <div className="bg-arcade-ink font-display text-arcade-bone">
+      <RouteRail />
+
+      <section className="relative isolate flex min-h-[100svh] overflow-hidden bg-arcade-ink">
+        <motion.video
+          aria-hidden="true"
+          className="absolute inset-0 -z-20 h-full w-full object-cover"
+          style={reduced ? undefined : { y: heroVideoY, scale: 1.15 }}
+          autoPlay={!reduced}
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          poster="/hero-poster.jpg"
+        >
+          <source src="/hero-campus.mp4" type="video/mp4" />
+        </motion.video>
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-black/82" />
+
+        <motion.div
+          className="wrap relative z-10 flex min-h-[100svh] w-full flex-col justify-between pb-0 pt-28 sm:pt-32"
+          style={reduced ? undefined : { y: heroCopyY, opacity: heroCopyOpacity }}
+          initial="hidden"
+          animate="show"
+          variants={{ hidden: {}, show: { transition: { staggerChildren: reduced ? 0 : 0.11, delayChildren: reduced ? 0 : 0.1 } } }}
+        >
+          <motion.div variants={item} className="flex flex-wrap items-start justify-between gap-6">
+            <div className="max-w-xl">
+              <p className="font-display text-[10px] font-bold uppercase tracking-[0.24em] text-arcade-lime">
+                Pakistan&apos;s national student tech convention
+              </p>
+              <p className="mt-2 font-display text-xs font-semibold uppercase tracking-[0.14em] text-arcade-bone/70 sm:text-sm">
+                {event.venue}
+              </p>
+            </div>
+            <p className="font-display text-[10px] font-bold uppercase tracking-[0.24em] text-arcade-mute">
+              COMSATS · Abbottabad · 2026
+            </p>
+          </motion.div>
+
+          <div className="py-16 lg:py-20">
+            <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
+              <motion.h1
+                variants={item}
+                className="font-display font-bold uppercase leading-[0.78] tracking-[-0.06em] text-arcade-bone"
+                style={{ fontSize: 'clamp(4.5rem, 14vw, 11rem)' }}
+              >
+                CITE<span className="text-arcade-lime">&apos;26</span>
+              </motion.h1>
+
+              <motion.div
+                variants={item}
+                className="hidden shrink-0 flex-col items-end gap-2 border-l border-white/20 pl-8 lg:flex"
+              >
+                <span className="font-display text-[10px] font-bold uppercase tracking-[0.24em] text-arcade-lime">
+                  One day only
+                </span>
+                <span className="font-display text-5xl font-bold tabular-nums tracking-[-0.06em] text-arcade-bone xl:text-6xl">
+                  12.12.26
+                </span>
+                <span className="font-display text-[10px] font-bold uppercase tracking-[0.2em] text-arcade-mute">
+                  Nineteen competitions
+                </span>
+              </motion.div>
+            </div>
+
+            <motion.div variants={item} className="mt-8">
+              <button
+                type="button"
+                onClick={() => onNavigate('tracks', '#/tracks')}
+                className="inline-flex items-center gap-2 border-b border-white/40 pb-1 font-display text-xs font-bold uppercase tracking-[0.18em] text-arcade-bone transition-colors hover:border-arcade-lime hover:text-arcade-lime focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-lime focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-ink"
+              >
+                Explore all 19 events
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </motion.div>
+          </div>
+
+          <motion.div
+            variants={item}
+            className="grid grid-cols-2 border-t border-white/20 lg:grid-cols-4"
+          >
+            {[
+              { label: 'Date', value: '12 Dec 2026' },
+              { label: 'Campus', value: 'CUI Abbottabad' },
+              { label: 'Events', value: '19 competitions' },
+            ].map((fact) => (
+              <div key={fact.label} className="border-b border-white/20 px-1 py-5 sm:px-4 lg:border-b-0 lg:border-r">
+                <p className="font-display text-[9px] font-bold uppercase tracking-[0.2em] text-arcade-mute">
+                  {fact.label}
+                </p>
+                <p className="mt-2 font-display text-sm font-bold uppercase tracking-[-0.01em] text-arcade-bone sm:text-base">
+                  {fact.value}
+                </p>
+              </div>
+            ))}
+            <div className="col-span-2 flex items-center justify-start px-1 py-5 sm:px-4 lg:col-span-1 lg:border-b-0 lg:justify-end">
+              <TicketLink href={event.registrationUrl}>Register now</TicketLink>
+            </div>
+          </motion.div>
+        </motion.div>
       </section>
 
-      {/* ======================================================================
-          CLOSING CTA
-      ====================================================================== */}
-      <section className="py-20 bg-navy-950 text-center relative overflow-hidden">
-        <div className="wrap max-w-2xl relative z-10">
-          <div className="flex justify-center mb-5">
-            <PaperPlane flightTrail={false} size="lg" />
-          </div>
-          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold uppercase text-sand-200">
-            Ready to Compete in Abbottabad?
-          </h2>
-          <p className="mt-3 text-sm text-ivory-muted leading-relaxed">
-            Whether you&apos;re building your first project or shipping your next startup, CITE&apos;26 is where you belong. Open to degree students across Pakistan.
-          </p>
-          <div className="mt-8 flex justify-center">
-            <Button href={event.registrationUrl} target="_blank" rel="noopener noreferrer" size="lg">
-              Register Your Team
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </section>
+      <DayRoute onNavigate={onNavigate} />
+      <ArenaSection onNavigate={onNavigate} />
+      <CampusSection onNavigate={onNavigate} />
+      <ClosingCTA />
     </div>
   );
 }

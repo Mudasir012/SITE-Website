@@ -1,8 +1,21 @@
 import { useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
-import AcademicCrest from './AcademicCrest.jsx';
 
-const tones = ['#DDEBDD', '#F2D9C4', '#E5DDF3', '#F4E3AF', '#D8E9F0', '#F1D8DC'];
+const accents = {
+  A: {
+    label: 'CS',
+    text: 'text-arcade-violet',
+    block: 'bg-arcade-violet',
+    border: 'border-arcade-violet/50',
+  },
+  B: {
+    label: 'EX',
+    text: 'text-arcade-limeHot',
+    block: 'bg-arcade-limeHot',
+    border: 'border-arcade-limeHot/50',
+  },
+};
 
 export default function EventCard({
   event,
@@ -12,86 +25,150 @@ export default function EventCard({
   actionLabel = 'Register',
   className = '',
 }) {
+  const reduced = useReducedMotion();
   const [imageFailed, setImageFailed] = useState(false);
-  const tone = tones[index % tones.length];
+  const accent = accents[event.code] || accents.A;
   const number = String(index + 1).padStart(2, '0');
-  const badgeCode = `${event.code || 'C'}${number}`;
+  const enterDelay = Math.min(index * 0.035, 0.32);
+  const actionClass = `group/action inline-flex w-full items-center justify-between gap-4 font-display text-[11px] font-bold uppercase tracking-[0.18em] text-arcade-bone transition-colors duration-200 hover:text-arcade-lime focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-lime focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-coal ${accent.text}`;
+
+  const action = (
+    <>
+      <span>{actionLabel}</span>
+      <span className="grid h-8 w-8 shrink-0 place-items-center border border-white/15 text-arcade-bone transition-all duration-300 group-hover/action:border-arcade-lime group-hover/action:bg-arcade-lime group-hover/action:text-arcade-ink group-focus-within/action:border-arcade-lime group-focus-within/action:bg-arcade-lime group-focus-within/action:text-arcade-ink">
+        <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover/action:translate-x-0.5 group-hover/action:-translate-y-0.5" aria-hidden="true" />
+      </span>
+    </>
+  );
 
   return (
-    <article
-      className={`group relative flex h-full flex-col overflow-hidden rounded-[10px] border border-navy-950/20 bg-sand-100 text-navy-950 shadow-[0_16px_30px_-24px_rgba(2,8,20,0.95)] transition-transform duration-300 hover:-translate-y-1 focus-within:-translate-y-1 ${className}`}
+    <motion.article
+      initial={reduced ? false : { opacity: 0, y: 26, rotateX: -7 }}
+      whileInView={reduced ? undefined : { opacity: 1, y: 0, rotateX: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.62, delay: enterDelay, ease: [0.16, 1, 0.3, 1] }}
+      style={{ transformPerspective: 900, transformStyle: 'preserve-3d' }}
+      className={`group relative flex h-full min-h-[340px] overflow-hidden border border-white/10 bg-arcade-coal shadow-[0_28px_60px_-42px_rgba(0,0,0,0.95)] transition-colors duration-300 hover:border-white/25 focus-within:border-white/30 ${className}`}
     >
-      <div className="relative px-5 pb-6 pt-4" style={{ backgroundColor: tone }}>
-        <div className="flex items-start justify-between gap-3">
-          <span className="grid h-8 w-8 place-items-center rounded-full border border-navy-950/20 bg-sand-50 text-navy-900">
-            <AcademicCrest className="h-4 w-5" />
-          </span>
-          <span className="rounded-full border border-navy-950/20 bg-sand-50 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-navy-900">
-            CITE'26
-          </span>
-        </div>
+      <div className="relative z-10 flex w-[54px] shrink-0 flex-col items-center justify-between border-r border-white/10 bg-arcade-ink px-2 py-4">
+        <span className={`font-display text-[10px] font-bold uppercase tracking-[0.18em] ${accent.text}`}>
+          {event.code || 'C'}
+        </span>
+        <span className="font-display text-xl font-bold tabular-nums tracking-[-0.04em] text-arcade-bone [writing-mode:vertical-rl]">
+          {number}
+        </span>
+        <span aria-hidden="true" className={`h-9 w-[3px] ${accent.block}`} />
+      </div>
 
-        <div className="relative mx-auto mt-3 w-fit">
-          <div className="h-28 w-28 rounded-full border-[6px] border-sand-50 outline outline-2 outline-navy-950/20 sm:h-32 sm:w-32">
-            <div className="h-full w-full overflow-hidden rounded-full border border-navy-950/10 bg-sand-200">
-              {imageFailed ? (
-                <span className="grid h-full w-full place-items-center font-display text-3xl font-black text-navy-900/40">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="relative h-[124px] shrink-0 overflow-hidden border-b border-white/10 bg-arcade-ink">
+          <motion.div
+            initial={reduced ? false : { clipPath: 'inset(0 100% 0 0)' }}
+            whileInView={reduced ? undefined : { clipPath: 'inset(0 0% 0 0)' }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.75, delay: enterDelay + 0.08, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute inset-0"
+          >
+            {imageFailed ? (
+              <div className="grid h-full w-full place-items-center bg-arcade-coal">
+                <span className={`font-display text-4xl font-bold tracking-[-0.06em] ${accent.text}`}>
                   {event.name.charAt(0)}
                 </span>
+              </div>
+            ) : (
+              <img
+                src={event.image}
+                alt=""
+                width="600"
+                height="600"
+                loading="lazy"
+                decoding="async"
+                onError={() => setImageFailed(true)}
+                className="h-full w-full object-cover opacity-70 transition-transform duration-500 ease-out group-hover:scale-[1.06] group-focus-within:scale-[1.06]"
+              />
+            )}
+          </motion.div>
+          <span aria-hidden="true" className="absolute inset-0 bg-arcade-ink/25" />
+          <span aria-hidden="true" className="absolute right-3 top-3 grid h-7 w-7 place-items-center border border-white/15 bg-arcade-ink/80">
+            <img
+              src="/CITE_White_Icon_Only.png"
+              alt=""
+              width="20"
+              height="20"
+              loading="lazy"
+              decoding="async"
+              className="h-5 w-5 object-contain"
+            />
+          </span>
+          <span aria-hidden="true" className={`absolute bottom-0 left-0 h-[3px] w-16 ${accent.block}`} />
+        </div>
+
+        <div className="flex flex-1 flex-col p-5">
+          <div>
+            <h3 className="font-display text-xl font-bold uppercase leading-[1.05] tracking-[-0.04em] text-arcade-bone sm:text-2xl">
+              {event.name}
+            </h3>
+            <p className="mt-2 font-display text-xs leading-relaxed text-arcade-mute">{event.category}</p>
+          </div>
+
+          <dl className="mt-4 grid grid-cols-2 gap-px border border-white/10 bg-white/10">
+            <div className="bg-arcade-ink px-3 py-2.5">
+              <dt className="font-display text-[9px] font-bold uppercase tracking-[0.16em] text-arcade-mute">
+                Prize pool
+              </dt>
+              <dd className="mt-1 font-display text-[11px] font-bold leading-tight text-arcade-bone">
+                {event.prize || 'To be announced'}
+              </dd>
+            </div>
+            <div className="bg-arcade-ink px-3 py-2.5">
+              <dt className="font-display text-[9px] font-bold uppercase tracking-[0.16em] text-arcade-mute">
+                Format
+              </dt>
+              <dd className="mt-1 font-display text-[11px] font-bold leading-tight text-arcade-bone">
+                {event.format || 'On-site judging'}
+              </dd>
+            </div>
+          </dl>
+          <p className="mt-3 font-display text-[10px] font-bold uppercase tracking-[0.16em] text-arcade-mute">
+            {event.eligibility || 'Degree students'}
+          </p>
+
+          <div className="mt-auto pt-5">
+            <div className="border-t border-white/10 pt-4">
+              {onNavigate ? (
+                <button
+                  type="button"
+                  onClick={onNavigate}
+                  aria-label={`${actionLabel} for ${event.name}`}
+                  className={actionClass}
+                >
+                  {action}
+                </button>
               ) : (
-                <img
-                  src={event.image}
-                  alt={`${event.name} competition theme`}
-                  width="600"
-                  height="600"
-                  loading="lazy"
-                  decoding="async"
-                  onError={() => setImageFailed(true)}
-                  className="h-full w-full object-cover"
-                />
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${actionLabel} for ${event.name}`}
+                  className={actionClass}
+                >
+                  {action}
+                </a>
               )}
             </div>
           </div>
-          <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-navy-950/30 bg-navy-950 px-2 py-0.5 font-mono text-[10px] font-bold tracking-[0.14em] text-sand-100">
-            {badgeCode}
-          </span>
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col px-5 pb-5 pt-6">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="font-display text-xl font-bold leading-[1.15] tracking-tight text-navy-950">
-            {event.name}
-          </h3>
-          <span className="mt-0.5 shrink-0 font-mono text-[10px] font-bold tracking-[0.16em] text-navy-800/60">
-            {number}
-          </span>
-        </div>
-        <p className="mt-2 text-xs leading-snug text-navy-800/70">{event.category}</p>
-
-        <div className="mt-auto border-t border-navy-950/15 pt-4">
-          {onNavigate ? (
-            <button
-              type="button"
-              onClick={onNavigate}
-              className="inline-flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-navy-900 transition-colors hover:text-navy-600"
-            >
-              {actionLabel}
-              <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
-            </button>
-          ) : (
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-navy-900 transition-colors hover:text-navy-600"
-            >
-              {actionLabel}
-              <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
-            </a>
-          )}
-        </div>
-      </div>
-    </article>
+      <motion.span
+        aria-hidden="true"
+        initial={reduced ? false : { scaleX: 0 }}
+        whileInView={reduced ? undefined : { scaleX: 1 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.6, delay: enterDelay + 0.12, ease: [0.16, 1, 0.3, 1] }}
+        style={{ originX: 0 }}
+        className={`absolute bottom-0 left-[54px] right-0 h-[2px] ${accent.block}`}
+      />
+    </motion.article>
   );
 }

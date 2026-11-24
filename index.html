@@ -22,28 +22,22 @@
     <meta property="og:image" content="/og-image.svg" />
     <meta name="twitter:card" content="summary_large_image" />
 
-    <!-- Hero image is the LCP candidate; preload it ahead of the lazy route chunk -->
-    <link rel="preload" as="image" href="/Hero%20Backgroound.webp" type="image/webp" fetchpriority="high" />
+    <!-- Hero poster is the first paint while the background video loads -->
+    <link rel="preload" as="image" href="/hero-poster.jpg" type="image/jpeg" fetchpriority="high" />
 
-    <!-- Fonts: async stylesheets, Urdu subset to the glyphs used by the eight mottos -->
+    <!-- Fonts: async stylesheets -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="preload"
       as="style"
-      href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400;1,600&family=Space+Grotesk:wght@500;600;700;800&display=swap"
-      onload="this.onload=null;this.rel='stylesheet'"
-    />
-    <link
-      rel="preload"
-      as="style"
-      href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@500;700&display=swap&text=%D8%A6%D8%A7%D8%A8%D8%AA%D8%AC%D8%AD%D8%AE%D8%AF%D8%B1%D8%B2%D8%B3%D8%B4%D8%B5%D8%B9%D9%82%D9%84%D9%85%D9%86%D9%88%D9%90%D9%BE%DA%A9%DA%AF%DA%BA%DB%81%DB%8C%E2%80%94"
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400;1,600&family=Space+Grotesk:wght@400;500;600;700&display=swap"
       onload="this.onload=null;this.rel='stylesheet'"
     />
     <noscript>
       <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400;1,600&family=Space+Grotesk:wght@500;600;700;800&family=Noto+Nastaliq+Urdu:wght@500;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400;1,600&family=Space+Grotesk:wght@400;500;600;700&display=swap"
       />
     </noscript>
 

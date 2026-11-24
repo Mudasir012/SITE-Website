@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { GraduationCap, MapPin, Users, ArrowRight, CheckCircle2 } from 'lucide-react';
-import SectionHeading from '../components/SectionHeading.jsx';
-import Button from '../components/Button.jsx';
-import TornEdge from '../components/TornEdge.jsx';
-import PaperPlane from '../components/PaperPlane.jsx';
-import UniversityCard from '../components/UniversityCard.jsx';
-import WashiTape from '../components/WashiTape.jsx';
+import {
+  Award,
+  ArrowRight,
+  ArrowUpRight,
+  CheckCircle2,
+  GraduationCap,
+  Landmark,
+  MapPin,
+  Users,
+} from 'lucide-react';
+import { Reveal, RevealHeading } from '../components/ScrollReveal.jsx';
 import { event } from '../data/event.js';
 
 const checklistItems = [
@@ -14,6 +18,11 @@ const checklistItems = [
   'Pick an event from our 19-competition lineup',
   'Pack your laptop, chargers, and valid student ID card or CNIC',
 ];
+
+const factIcons = { GraduationCap, Landmark, Award };
+
+const ticketBase =
+  'group inline-flex items-center justify-center gap-3 bg-arcade-lime px-6 py-4 text-[11px] font-bold uppercase tracking-[0.18em] text-arcade-ink transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-bone focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-ink';
 
 export default function AboutPage({ onNavigate }) {
   const [checkedItems, setCheckedItems] = useState([0, 1]);
@@ -27,109 +36,158 @@ export default function AboutPage({ onNavigate }) {
   const progress = Math.round((checkedItems.length / checklistItems.length) * 100);
 
   return (
-    <div className="pt-14 sm:pt-16 md:pt-20 pb-24">
-      <div className="wrap">
-        <div className="relative">
-          {/* Paper airplane accent in corner */}
-          <div className="absolute right-0 top-0 hidden md:block">
-            <PaperPlane flightTrail={false} />
+    <div className="bg-arcade-ink font-display text-arcade-bone">
+      {/* Editorial dossier hero — no hero media, distinct from Home */}
+      <section className="relative overflow-hidden bg-arcade-ink py-24 sm:py-32">
+        <div
+          aria-hidden="true"
+          className="absolute inset-y-0 right-0 hidden w-[34%] border-l border-white/10 bg-arcade-coal lg:block"
+        >
+          <div className="flex h-full flex-col justify-between p-8 xl:p-10">
+            <p className="font-display text-[10px] font-bold uppercase tracking-[0.24em] text-arcade-violet">
+              Dossier / 01
+            </p>
+            <ol className="space-y-6">
+              {['Heritage', 'Campus', 'Readiness'].map((label, index) => (
+                <li key={label} className="border-b border-white/10 pb-3 text-right">
+                  <span className="font-display text-[11px] font-bold tabular-nums text-arcade-lime">
+                    0{index + 1}
+                  </span>
+                  <span className="ml-3 font-display text-sm font-bold uppercase tracking-[0.14em] text-arcade-bone/70">
+                    {label}
+                  </span>
+                </li>
+              ))}
+            </ol>
+            <p className="font-display text-[10px] font-bold uppercase tracking-[0.2em] text-arcade-mute">
+              CUI / ABT — 2026
+            </p>
           </div>
-
-          <SectionHeading
-            as="h1"
-            motto="علم و ہنر کا سنگم — قومی شناخت"
-            title="About CITE 2026"
-            subtitle="Where Ambition Meets Opportunity at CUI Abbottabad"
-            description="CITE 2026 is COMSATS University Abbottabad’s flagship national student competition &amp; tech convention — organized by students, for students."
-          />
         </div>
 
-        {/* Narrative Grid */}
-        <div className="grid gap-10 lg:grid-cols-12 items-start mt-12">
-          {/* Story Column */}
-          <div className="lg:col-span-7 space-y-6 text-sm sm:text-base leading-relaxed text-ivory-muted">
-            <UniversityCard
-              label="ABOUT FILE"
-              eyebrow="OFFICIAL CAMPUS FILE"
-              sub="CITE'26 · Heritage & Spirit"
-              code="CUI / ABT"
-            >
-              <h3 className="font-display text-xl font-bold text-ivory mb-4">
-                The Heritage &amp; Campus Spirit
-              </h3>
+        <div className="wrap relative">
+          <div className="lg:max-w-[62%]">
+            <Reveal>
+              <p className="font-display text-[11px] font-bold uppercase tracking-[0.24em] text-arcade-violet">
+                About CITE 2026
+              </p>
+            </Reveal>
+
+            <RevealHeading
+              as="h1"
+              lines={[{ text: 'About' }, { text: "CITE'26", tone: 'violet' }]}
+              className="mt-6 font-display font-bold uppercase leading-[0.84] tracking-[-0.055em] text-arcade-bone"
+              style={{ fontSize: 'clamp(4rem, 11vw, 8.5rem)' }}
+            />
+
+            <Reveal className="mt-9 max-w-2xl" delay={0.14}>
+              <p className="font-display text-lg font-bold uppercase tracking-[0.06em] text-arcade-bone sm:text-xl">
+                Where Ambition Meets Opportunity at CUI Abbottabad
+              </p>
+              <p className="mt-3 font-display text-sm leading-relaxed text-arcade-mute sm:text-base">
+                CITE 2026 is COMSATS University Abbottabad’s flagship national student competition
+                &amp; tech convention — organized by students, for students.
+              </p>
+            </Reveal>
+
+            <Reveal className="mt-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center" delay={0.22}>
+              <a href={event.registrationUrl} target="_blank" rel="noopener noreferrer" className={ticketBase}>
+                <span>Register now</span>
+                <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+              </a>
+              <button
+                type="button"
+                onClick={() => onNavigate('tracks', '#/tracks')}
+                className="inline-flex items-center gap-2 border-b border-white/40 pb-1 font-display text-xs font-bold uppercase tracking-[0.18em] text-arcade-bone transition-colors hover:border-arcade-violet hover:text-arcade-violet focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-violet focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-ink"
+              >
+                Explore all 19 events
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* Narrative + readiness */}
+      <section className="border-y border-white/10 bg-arcade-coal py-24 sm:py-32">
+        <div className="wrap grid gap-14 lg:grid-cols-12 lg:gap-16">
+          <div className="lg:col-span-7">
+            <Reveal>
+              <p className="font-display text-[11px] font-bold uppercase tracking-[0.22em] text-arcade-violet">
+                About file / Official campus file
+              </p>
+            </Reveal>
+            <RevealHeading
+              lines={[
+                { text: 'The Heritage &' },
+                { text: 'Campus Spirit', tone: 'violet' },
+              ]}
+              className="mt-6 font-display font-bold uppercase leading-[0.9] tracking-[-0.05em] text-arcade-bone"
+              style={{ fontSize: 'clamp(2.8rem, 5.5vw, 4.8rem)' }}
+            />
+
+            <Reveal className="mt-8 space-y-5 text-sm leading-relaxed text-arcade-mute sm:text-base" delay={0.12}>
               <p>
                 For one day each winter, the{' '}
-                <strong className="text-sand-300 font-semibold">
+                <strong className="font-semibold text-arcade-bone">
                   COMSATS University Islamabad, Abbottabad Campus
                 </strong>{' '}
-                transforms into the beating heart of Pakistan’s student tech ecosystem. Organized by the CITE
-                (Society of Information Technology &amp; Engineering), the convention unites 800+ builders and competitors from Karachi
-                to Khyber in the crisp mountain foothills of Abbottabad.
+                transforms into the beating heart of Pakistan’s student tech ecosystem. Organized by the
+                CITE (Society of Information Technology &amp; Engineering), the convention unites 800+
+                builders and competitors from Karachi to Khyber in the crisp mountain foothills of
+                Abbottabad.
               </p>
-              <p className="mt-3">
-                Whether you are training your first machine learning model, competing in algorithmic challenges, or launching a civic startup, you will find
-                a category that fits and a judging panel that inspects working solutions —
-                not just pitch decks.
+              <p>
+                Whether you are training your first machine learning model, competing in algorithmic
+                challenges, or launching a civic startup, you will find a category that fits and a
+                judging panel that inspects working solutions — not just pitch decks.
               </p>
-            </UniversityCard>
+            </Reveal>
 
-            {/* University & Campus Context Badges */}
-            <div className="flex flex-wrap gap-2 pt-2">
-              <span className="inline-flex items-center gap-1.5 rounded border border-navy-700/60 bg-navy-800 px-3 py-1 font-mono text-xs text-sand-300 font-bold uppercase">
-                <GraduationCap className="h-4 w-4 text-sand-400" />
-                3rd National Edition
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded border border-navy-700/60 bg-navy-800 px-3 py-1 font-mono text-xs text-sand-300 font-bold uppercase">
-                <MapPin className="h-4 w-4 text-sand-400" />
-                Abbottabad, Khyber Pakhtunkhwa
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded border border-navy-700/60 bg-navy-800 px-3 py-1 font-mono text-xs text-sand-300 font-bold uppercase">
-                <Users className="h-4 w-4 text-sand-400" />
-                40+ Participating Universities
-              </span>
-            </div>
-
+            <Reveal className="mt-9 flex flex-wrap gap-2" delay={0.2}>
+              {[
+                { icon: GraduationCap, label: '3rd National Edition' },
+                { icon: MapPin, label: 'Abbottabad, Khyber Pakhtunkhwa' },
+                { icon: Users, label: '40+ Participating Universities' },
+              ].map(({ icon: Icon, label }) => (
+                <span
+                  key={label}
+                  className="inline-flex items-center gap-2 border border-white/10 bg-arcade-ink px-3 py-2 font-display text-[11px] font-bold uppercase tracking-[0.08em] text-arcade-bone/85"
+                >
+                  <Icon className="h-4 w-4 text-arcade-violet" aria-hidden="true" />
+                  {label}
+                </span>
+              ))}
+            </Reveal>
           </div>
 
-          {/* Interactive Readiness Checklist + Sticky Note */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="relative">
-              {/* Washi tape accent on checklist */}
-              <WashiTape
-                color="sand"
-                rotate="2deg"
-                width="6rem"
-                className="absolute -top-6 left-1/2 z-20 -translate-x-1/2"
-              />
-
-              <UniversityCard
-                label="READINESS FILE"
-                eyebrow="COMPETITOR READINESS"
-                sub="CITE'26 · Pre-Event Checklist"
-                code="FORM · 01"
-                showTab={false}
-                className="h-full"
-              >
-                <div className="flex items-center justify-between gap-3 pb-4 border-b border-navy-700/60">
-                  <p className="text-xs text-ivory-muted">
-                    Check off each item to prepare for Abbottabad.
+          <div className="lg:col-span-5">
+            <Reveal className="border border-arcade-violet/40 bg-arcade-ink p-6 sm:p-7" delay={0.1}>
+              <div className="flex items-start justify-between gap-4 border-b border-arcade-violet/30 pb-5">
+                <div>
+                  <p className="font-display text-[10px] font-bold uppercase tracking-[0.22em] text-arcade-violet">
+                    Competitor readiness
                   </p>
-                  <span className="shrink-0 rounded-[3px] bg-sand-300/10 border border-sand-400/30 px-2.5 py-1 font-mono text-xs font-bold text-sand-300">
-                    {progress}% Complete
-                  </span>
+                  <p className="mt-2 font-display text-xl font-bold uppercase tracking-[-0.03em] text-arcade-bone">
+                    Before you arrive.
+                  </p>
                 </div>
+                <span className="shrink-0 border border-arcade-violet/40 bg-arcade-violet/10 px-2.5 py-1 font-display text-xs font-bold text-arcade-violet">
+                  {progress}% Complete
+                </span>
+              </div>
 
-              {/* Progress Bar */}
-              <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-navy-900 border border-navy-700/60">
+              <div className="mt-5 h-1.5 w-full overflow-hidden border border-white/10 bg-arcade-coal">
                 <motion.div
-                  className="h-full bg-sand-300 rounded-full"
+                  className="h-full bg-arcade-violet"
                   initial={false}
                   animate={{ width: `${progress}%` }}
                   transition={{ type: 'spring', stiffness: 180, damping: 24 }}
                 />
               </div>
 
-              {/* Checklist items */}
+              <p className="mt-5 text-xs text-arcade-mute">Check off each item to prepare for Abbottabad.</p>
+
               <ul className="mt-5 space-y-3">
                 {checklistItems.map((item, idx) => {
                   const isChecked = checkedItems.includes(idx);
@@ -139,17 +197,17 @@ export default function AboutPage({ onNavigate }) {
                         type="button"
                         aria-pressed={isChecked}
                         onClick={() => toggleCheck(idx)}
-                        className={`w-full flex items-start gap-3 rounded-lg p-3 text-left transition-all ${
+                        className={`flex w-full items-start gap-3 border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-violet focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-ink ${
                           isChecked
-                            ? 'bg-navy-800 border border-sand-400/40 text-ivory'
-                            : 'bg-navy-900 border border-navy-700/60 text-ivory-muted hover:border-navy-600'
+                            ? 'border-arcade-violet/50 bg-arcade-violet/10 text-arcade-bone'
+                            : 'border-white/10 bg-arcade-coal text-arcade-mute hover:border-white/25'
                         }`}
                       >
-                        <div
-                          className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded border transition-colors ${
+                        <span
+                          className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center border transition-colors ${
                             isChecked
-                              ? 'border-sand-400 bg-sand-300 text-navy-950 font-bold'
-                              : 'border-navy-600 bg-navy-950'
+                              ? 'border-arcade-violet bg-arcade-violet text-white'
+                              : 'border-white/25 bg-arcade-ink'
                           }`}
                         >
                           {isChecked && (
@@ -158,11 +216,11 @@ export default function AboutPage({ onNavigate }) {
                               animate={{ scale: 1, opacity: 1 }}
                               transition={{ type: 'spring', stiffness: 520, damping: 24 }}
                             >
-                              <CheckCircle2 className="h-3.5 w-3.5" />
+                              <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
                             </motion.span>
                           )}
-                        </div>
-                        <span className={`text-xs sm:text-sm font-medium leading-relaxed ${isChecked ? 'text-sand-200 font-semibold' : ''}`}>
+                        </span>
+                        <span className={`text-xs leading-relaxed sm:text-sm ${isChecked ? 'font-semibold' : ''}`}>
                           {item}
                         </span>
                       </button>
@@ -171,8 +229,8 @@ export default function AboutPage({ onNavigate }) {
                 })}
               </ul>
 
-              <div className="mt-6 pt-4 border-t border-navy-700/60 flex items-center justify-between">
-                <span className="text-xs text-ivory-muted">
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5">
+                <span className="text-xs text-arcade-mute">
                   {checkedItems.length === checklistItems.length
                     ? 'You are fully prepared for Abbottabad.'
                     : 'Check items to prepare for the event.'}
@@ -181,34 +239,114 @@ export default function AboutPage({ onNavigate }) {
                   href={event.registrationUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-mono font-bold text-sand-300 hover:text-white uppercase"
+                  className="inline-flex items-center gap-1 font-display text-xs font-bold uppercase tracking-[0.12em] text-arcade-lime transition-colors hover:text-white"
                 >
-                  Register <ArrowRight className="h-3.5 w-3.5" />
+                  Register <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                 </a>
               </div>
-              </UniversityCard>
-            </div>
-
+            </Reveal>
           </div>
         </div>
+      </section>
 
-        {/* Stats Row */}
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-3 gap-4">
-          {event.stats.map(({ value, prefix = '', suffix = '', label }) => (
-            <div
-              key={label}
-              className="rounded-xl border border-navy-700/60 bg-navy-850 p-6 text-center shadow-sm"
-            >
-              <p className="font-display text-3xl font-black text-sand-300">
-                {prefix}{value}{suffix}
-              </p>
-              <p className="mt-1 font-mono text-xs uppercase tracking-wider text-ivory-muted">
-                {label}
-              </p>
-            </div>
-          ))}
+      {/* Campus facts — editorial rows, not Home's folded tiles */}
+      <section className="bg-arcade-ink py-24 sm:py-32">
+        <div className="wrap">
+          <RevealHeading
+            lines={[
+              { text: 'One campus.' },
+              { text: 'A whole competition.', tone: 'violet' },
+            ]}
+            className="font-display font-bold uppercase leading-[0.9] tracking-[-0.05em] text-arcade-bone"
+            style={{ fontSize: 'clamp(2.8rem, 6vw, 5.2rem)' }}
+          />
+          <Reveal className="mt-7 max-w-2xl font-display text-base leading-relaxed text-arcade-mute sm:text-lg" delay={0.1}>
+            {event.university.name}, {event.university.campus}. A computing department, a student
+            society, and a whole campus turned into a one-day competition venue.
+          </Reveal>
+
+          <div className="mt-14 grid gap-px border border-white/10 bg-white/10 sm:grid-cols-3">
+            {event.university.facts.map((fact, index) => {
+              const Icon = factIcons[fact.icon] || GraduationCap;
+              return (
+                <Reveal key={fact.title} className="bg-arcade-coal p-6 sm:p-7" delay={index * 0.08}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-display text-xs font-bold tabular-nums text-arcade-violet">
+                      0{index + 1}
+                    </span>
+                    <Icon className="h-5 w-5 text-arcade-bone/60" aria-hidden="true" />
+                  </div>
+                  <div className="mt-8 h-px w-10 bg-arcade-violet" />
+                  <h3 className="mt-5 font-display text-lg font-bold uppercase leading-tight tracking-[-0.03em] text-arcade-bone">
+                    {fact.title}
+                  </h3>
+                  <p className="mt-3 font-display text-sm leading-relaxed text-arcade-mute">
+                    {fact.description}
+                  </p>
+                </Reveal>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* Stats */}
+      <section className="bg-arcade-coal py-20 sm:py-24">
+        <div className="wrap">
+          <div className="grid grid-cols-2 gap-px border border-white/10 bg-white/10 md:grid-cols-3">
+            {event.stats.map(({ value, prefix = '', suffix = '', label }, index) => (
+              <Reveal key={label} className="bg-arcade-ink p-7 text-center sm:p-9" delay={index * 0.08}>
+                <p className="font-display text-4xl font-bold tracking-[-0.05em] text-arcade-violet sm:text-5xl">
+                  {prefix}{value}{suffix}
+                </p>
+                <p className="mt-3 font-display text-[11px] font-bold uppercase tracking-[0.18em] text-arcade-mute">
+                  {label}
+                </p>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Closing CTA */}
+      <section className="bg-arcade-ink py-24 sm:py-32">
+        <div className="wrap">
+          <div className="border-l-4 border-arcade-violet bg-arcade-coal p-8 sm:p-14">
+            <RevealHeading
+              lines={[
+                { text: 'Take your' },
+                { text: 'place.', tone: 'violet' },
+              ]}
+              className="font-display font-bold uppercase leading-[0.86] tracking-[-0.05em] text-arcade-bone"
+              style={{ fontSize: 'clamp(3rem, 8vw, 6rem)' }}
+            />
+            <Reveal className="mt-10 flex flex-col gap-7 sm:flex-row sm:items-end sm:justify-between" delay={0.12}>
+              <div>
+                <p className="font-display text-sm font-bold uppercase tracking-[0.16em] text-arcade-violet">
+                  {event.dateLabel} · {event.venueShort}
+                </p>
+                <p className="mt-2 max-w-md font-display text-sm leading-relaxed text-arcade-mute">
+                  Open to degree students across Pakistan. Bring a team or find one on campus.
+                </p>
+              </div>
+              <div className="flex flex-col items-start gap-4 sm:items-end">
+                <a href={event.registrationUrl} target="_blank" rel="noopener noreferrer" className={ticketBase}>
+                  <span>Register now</span>
+                  <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('tracks', '#/tracks')}
+                  className="inline-flex items-center gap-2 border-b border-white/40 pb-1 font-display text-xs font-bold uppercase tracking-[0.16em] text-arcade-bone transition-colors hover:border-arcade-violet hover:text-arcade-violet"
+                >
+                  See the event lineup
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

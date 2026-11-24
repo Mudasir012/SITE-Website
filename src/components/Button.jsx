@@ -13,6 +13,10 @@ const variants = {
     'bg-transparent hover:bg-navy-800 text-sand-300 hover:text-sand-100',
   dark:
     'bg-navy-950 hover:bg-navy-900 text-sand-200 border border-navy-700/60',
+  cite:
+    'bg-cite-yellow hover:bg-white text-cite-darker shadow-sm active:translate-y-0.5',
+  citeOutline:
+    'border border-white/60 bg-transparent text-white hover:bg-white hover:text-black shadow-sm',
 };
 
 const sizes = {

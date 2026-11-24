@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, useEffect } from 'react';
 import { AnimatePresence, MotionConfig } from 'framer-motion';
-import Dock from './sections/Dock.jsx';
+import Navbar from './sections/Navbar.jsx';
 import Footer from './sections/Footer.jsx';
 import PageTransition from './components/PageTransition.jsx';
 import HomePage from './pages/HomePage.jsx';
@@ -63,7 +63,8 @@ export default function App() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="min-h-screen bg-navy-900 text-ivory flex flex-col justify-between selection:bg-navy-500 selection:text-white">
+      <div className="min-h-screen bg-arcade-ink text-arcade-bone flex flex-col justify-between selection:bg-arcade-lime selection:text-arcade-ink">
+        {!isAdmin && <Navbar activePage={activePage} onNavigate={handleNavigate} />}
         <main className="flex-1">
           <AnimatePresence mode="wait" initial={false}>
             <PageTransition key={activePage}>
@@ -74,7 +75,6 @@ export default function App() {
           </AnimatePresence>
         </main>
         {!isAdmin && <Footer onNavigate={handleNavigate} />}
-        {!isAdmin && <Dock activePage={activePage} setActivePage={setActivePage} />}
       </div>
     </MotionConfig>
   );

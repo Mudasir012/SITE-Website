@@ -1,7 +1,6 @@
 import Reveal from './Reveal.jsx';
 
 export default function SectionHeading({
-  motto,
   title,
   subtitle,
   description,
@@ -12,11 +11,6 @@ export default function SectionHeading({
   const centered = align === 'center';
   return (
     <Reveal className={`mb-12 md:mb-16 ${centered ? 'mx-auto max-w-3xl text-center' : ''} ${className}`}>
-      {motto && (
-        <p className="font-nastaliq text-base sm:text-lg text-sand-400 mb-2 tracking-wide">
-          {motto}
-        </p>
-      )}
       <Heading className="font-display text-3xl font-bold tracking-tight text-ivory sm:text-4xl lg:text-5xl uppercase">
         {title}
       </Heading>

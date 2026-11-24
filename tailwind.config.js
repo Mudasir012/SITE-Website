@@ -35,13 +35,31 @@ export default {
           muted: '#94A3B8',
           subtle: '#8A96A8',
         },
+        // Sampled from the CITE emblem: blue / yellow / green / red
+        cite: {
+          blue: '#0041B3',
+          deep: '#002C74',
+          darker: '#001B48',
+          yellow: '#FCB601',
+          green: '#028B30',
+          red: '#E80100',
+        },
+        // Home page world: black stage, white type, electric violet + lime accents.
+        arcade: {
+          ink: '#050505',
+          coal: '#121212',
+          bone: '#FFFFFF',
+          mute: '#A3A3A3',
+          violet: '#8A2BE2',
+          lime: '#BFFF00',
+          limeHot: '#7BFF00',
+        },
       },
       fontFamily: {
-        display: ['"Space Grotesk"', 'sans-serif'],
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['"Space Grotesk"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['"Space Grotesk"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         serif: ['"Playfair Display"', 'Georgia', 'serif'],
         mono: ['"JetBrains Mono"', 'monospace'],
-        nastaliq: ['"Noto Nastaliq Urdu"', 'serif'],
         handwriting: ['Caveat', 'cursive'],
       },
       maxWidth: {

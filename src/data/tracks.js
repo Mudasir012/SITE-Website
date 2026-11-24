@@ -5,6 +5,13 @@
 const photo = (id) =>
   `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop`;
 
+// Shared published details. No prize amount is claimed; the pool is announced later.
+const eventDetails = {
+  prize: 'To be announced',
+  format: 'On-site judging',
+  eligibility: 'Degree students',
+};
+
 export const competitionCategories = [
   {
     code: 'A',
@@ -40,5 +47,5 @@ export const competitionCategories = [
 ];
 
 export const events = competitionCategories.flatMap(({ code, title, events: categoryEvents }) =>
-  categoryEvents.map((item) => ({ ...item, category: title, code }))
+  categoryEvents.map((item) => ({ ...item, ...eventDetails, category: title, code }))
 );
