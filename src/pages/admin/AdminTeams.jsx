@@ -207,11 +207,11 @@ export default function AdminTeams() {
         {loading ? (
           <div className="col-span-full py-12 text-center text-slate-400">
             <RefreshCw className="w-5 h-5 animate-spin text-slate-500 mx-auto mb-2" />
-            <span>Loading teams from database...</span>
+            <span>Loading teams…</span>
           </div>
         ) : teams.length === 0 ? (
           <div className="col-span-full py-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200 shadow-sm">
-            No teams registered in database.
+            No teams registered yet.
           </div>
         ) : (
           teams.map((tm) => (

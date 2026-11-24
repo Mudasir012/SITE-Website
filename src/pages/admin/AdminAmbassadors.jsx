@@ -177,7 +177,7 @@ export default function AdminAmbassadors() {
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">
                     <RefreshCw className="w-4 h-4 animate-spin text-slate-500 inline mr-2" />
-                    <span>Loading ambassadors from database...</span>
+                    <span>Loading ambassadors…</span>
                   </td>
                 </tr>
               ) : ambassadors.length === 0 ? (

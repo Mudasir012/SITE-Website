@@ -40,7 +40,7 @@ export default function AdminDashboard({ onNavigateTab }) {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center gap-3">
           <RefreshCw className="w-7 h-7 animate-spin text-slate-400" />
-          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Loading Live Metrics...</span>
+          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Loading dashboard…</span>
         </div>
       </div>
     );
@@ -54,14 +54,11 @@ export default function AdminDashboard({ onNavigateTab }) {
       {/* Welcome Banner */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
-            <span>Executive Dashboard</span>
-            <span className="text-xs bg-emerald-50 text-emerald-700 font-mono font-bold px-2.5 py-0.5 rounded-full border border-emerald-200">
-              Supabase Live
-            </span>
+          <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">
+            Executive Dashboard
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Real-time enrollment metrics, track capacity monitoring, and system activity.
+            Enrollment metrics, track capacity, and recent activity at a glance.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
@@ -149,7 +146,7 @@ export default function AdminDashboard({ onNavigateTab }) {
                 <BarChart3 className="w-4 h-4 text-slate-700" />
                 <span>Registrations Velocity (Last 10 Days)</span>
               </h3>
-              <p className="text-xs text-slate-500 mt-0.5">Daily application volume logged in database</p>
+              <p className="text-xs text-slate-500 mt-0.5">Daily application volume</p>
             </div>
             <div className="text-xs font-mono font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
               Peak: {maxTrend} / day
@@ -187,7 +184,7 @@ export default function AdminDashboard({ onNavigateTab }) {
           </div>
 
           <div className="flex items-center justify-between pt-4 text-xs text-slate-500">
-            <span>Aggregated database registrations</span>
+            <span>Registrations across all events</span>
             <button
               onClick={() => onNavigateTab('registrations')}
               className="text-slate-900 hover:text-slate-700 font-bold flex items-center gap-1"
@@ -268,7 +265,7 @@ export default function AdminDashboard({ onNavigateTab }) {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Activity className="w-4 h-4 text-slate-700" />
-            <h3 className="text-sm font-bold text-slate-900">Recent Database Activity</h3>
+            <h3 className="text-sm font-bold text-slate-900">Recent Activity</h3>
           </div>
           <button
             onClick={() => onNavigateTab('audit')}

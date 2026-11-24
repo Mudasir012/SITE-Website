@@ -81,7 +81,7 @@ export const adminService = {
 
   async login(email, password, expectedRole = null) {
     if (!supabase) {
-      throw new Error('Supabase is not configured. Please check your .env variables.');
+      throw new Error('The admin portal is temporarily unavailable. Please try again shortly.');
     }
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
@@ -109,8 +109,8 @@ export const adminService = {
       await supabase.auth.signOut();
       throw new Error(
         expectedRole === 'super_admin'
-          ? 'Access Denied: This account only has Event Admin privileges. Please select "Event Admin" to sign in.'
-          : 'Access Denied: This account has Super Admin privileges. Please select "Super Admin" to sign in.'
+          ? 'Access denied. This account does not have Super Admin privileges.'
+          : 'Access denied. This account does not have Event Admin privileges.'
       );
     }
 
@@ -132,7 +132,7 @@ export const adminService = {
   },
 
   async resetPassword(email) {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabase) throw new Error('The admin portal is temporarily unavailable. Please try again shortly.');
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo: `${window.location.origin}/#/admin`,
     });
@@ -155,7 +155,7 @@ export const adminService = {
   },
 
   async removeAdmin(adminId) {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabase) throw new Error('The admin portal is temporarily unavailable. Please try again shortly.');
     const curAdmin = await this.getCurrentAdmin();
 
     const { error } = await supabase
@@ -292,7 +292,7 @@ export const adminService = {
   },
 
   async updateRegistrationStatus(id, newStatus, customNotes = '') {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabase) throw new Error('The admin portal is temporarily unavailable. Please try again shortly.');
     const curAdmin = await this.getCurrentAdmin();
 
     // Check capacity before approving
@@ -435,7 +435,7 @@ export const adminService = {
   },
 
   async updateTeamStatus(teamId, status, notes = '') {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabase) throw new Error('The admin portal is temporarily unavailable. Please try again shortly.');
     const curAdmin = await this.getCurrentAdmin();
 
     const updates = { status, updated_at: new Date().toISOString() };
@@ -525,7 +525,7 @@ export const adminService = {
   },
 
   async saveEvent(eventData) {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabase) throw new Error('The admin portal is temporarily unavailable. Please try again shortly.');
     const curAdmin = await this.getCurrentAdmin();
 
     if (eventData.id) {
@@ -697,7 +697,7 @@ export const adminService = {
   },
 
   async sendAnnouncement({ subject, body, targetGroup, eventId, isTest = false, testRecipient = '' }) {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabase) throw new Error('The admin portal is temporarily unavailable. Please try again shortly.');
     const curAdmin = await this.getCurrentAdmin();
     const count = isTest ? 1 : await this.previewRecipientCount(targetGroup, eventId);
 

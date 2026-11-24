@@ -34,7 +34,7 @@ export async function sendEmail({ to, subject, html, text }) {
       }),
     });
   } catch {
-    throw new Error('Email service is unreachable. Check the server deployment.');
+    throw new Error('Email service is temporarily unavailable. Please try again.');
   }
 
   const data = await res.json().catch(() => ({}));

@@ -83,7 +83,8 @@ export default function AdminRegistrations({ initialFilterStatus = 'all' }) {
         setActiveParticipant(prev => ({ ...prev, status }));
       }
     } catch (err) {
-      alert(`Error updating registration: ${err.message}`);
+      console.error('Error updating registration:', err);
+      alert('Unable to update this registration. Please try again.');
     }
   };
 
@@ -92,7 +93,7 @@ export default function AdminRegistrations({ initialFilterStatus = 'all' }) {
     setConfirmModal({
       isOpen: true,
       title: `Bulk ${actionStatus.toUpperCase()} Registrations`,
-      message: `Set the status of ${selectedIds.length} registration(s) to "${actionStatus}" in Supabase?`,
+      message: `Set the status of ${selectedIds.length} registration(s) to "${actionStatus}"?`,
       isDestructive: actionStatus === 'rejected',
       action: async () => {
         await adminService.bulkUpdateRegistrations(selectedIds, actionStatus);
@@ -336,14 +337,14 @@ export default function AdminRegistrations({ initialFilterStatus = 'all' }) {
                   <td colSpan={7} className="py-12 text-center text-slate-400">
                     <div className="inline-flex items-center gap-2">
                       <RefreshCw className="w-4 h-4 animate-spin text-slate-500" />
-                      <span>Loading records from Supabase...</span>
+                      <span>Loading records…</span>
                     </div>
                   </td>
                 </tr>
               ) : registrations.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-400">
-                    No registrations found in database.
+                    No registrations found.
                   </td>
                 </tr>
               ) : (

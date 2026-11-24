@@ -10,12 +10,8 @@ import {
   ShieldAlert,
   LogOut,
   ExternalLink,
-  Database,
   Menu,
   X,
-  Copy,
-  Check,
-  HelpCircle
 } from 'lucide-react';
 import AdminAuth from './AdminAuth';
 import AdminDashboard from './AdminDashboard';
@@ -34,8 +30,6 @@ export default function AdminPortal({ onBackToSite }) {
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [tabParams, setTabParams] = useState({});
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showSetupModal, setShowSetupModal] = useState(false);
-  const [copiedSql, setCopiedSql] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -89,23 +83,6 @@ export default function AdminPortal({ onBackToSite }) {
     setMobileMenuOpen(false);
   };
 
-  const copySupabaseSql = async () => {
-    try {
-      const response = await fetch('/supabase/schema.sql');
-      let text = '';
-      if (response.ok) {
-        text = await response.text();
-      } else {
-        text = `-- Supabase Schema available in supabase/schema.sql in root`;
-      }
-      navigator.clipboard.writeText(text);
-      setCopiedSql(true);
-      setTimeout(() => setCopiedSql(false), 2500);
-    } catch (e) {
-      alert('You can copy the SQL script from "supabase/schema.sql" directly.');
-    }
-  };
-
   if (authLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-800">
@@ -142,7 +119,7 @@ export default function AdminPortal({ onBackToSite }) {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-slate-900 selection:text-white">
+    <div className="admin-theme min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
       {/* Top Navbar */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 px-4 lg:px-6 py-2.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
@@ -155,14 +132,16 @@ export default function AdminPortal({ onBackToSite }) {
           </button>
 
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-slate-900 text-amber-400 font-bold flex items-center justify-center text-sm shadow-sm">
-              C
-            </div>
+            <img
+              src="/CUI%20Logo.png"
+              alt="COMSATS University Islamabad"
+              className="h-9 w-9 object-contain"
+            />
             <div>
               <div className="font-bold text-slate-900 text-sm tracking-tight flex items-center gap-2">
                 <span>CITE Admin Portal</span>
-                <span className="text-[10px] bg-slate-100 text-slate-600 font-mono px-2 py-0.5 rounded font-bold border border-slate-200">
-                  Supabase Live
+                <span className="hidden sm:inline text-[10px] uppercase tracking-widest text-slate-400 font-mono font-semibold border-l border-slate-200 pl-2">
+                  CITE &apos;26
                 </span>
               </div>
               <p className="text-[10px] text-slate-500 font-medium hidden sm:block">Department of Computer Science • CUI Abbottabad</p>
@@ -172,17 +151,6 @@ export default function AdminPortal({ onBackToSite }) {
 
         {/* Right Action Cluster */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Database Connected Pill */}
-          <button
-            onClick={() => setShowSetupModal(true)}
-            className="px-2.5 py-1 rounded-lg text-xs font-mono font-semibold flex items-center gap-1.5 border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 transition-colors"
-            title="Supabase Database Status"
-          >
-            <Database className="w-3.5 h-3.5 text-emerald-600" />
-            <span className="hidden md:inline">Connected</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          </button>
-
           {/* Current Admin Pill */}
           <div className="hidden sm:flex items-center gap-2 bg-slate-100/90 px-2.5 py-1 rounded-lg border border-slate-200">
             <div className="w-6 h-6 rounded-md bg-slate-900 text-white flex items-center justify-center text-xs font-bold">
@@ -237,30 +205,28 @@ export default function AdminPortal({ onBackToSite }) {
                 <button
                   key={item.id}
                   onClick={() => handleNavigateTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  className={`group w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                     isActive
-                      ? 'bg-slate-900 text-white shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                      ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/25'
+                      : 'text-slate-600 hover:text-blue-700 hover:bg-blue-50'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-amber-400' : 'text-slate-400'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-blue-600'}`} />
                   <span>{item.label}</span>
                 </button>
               );
             })}
           </div>
 
-          <div className="pt-4 border-t border-slate-200 space-y-2">
-            <button
-              onClick={() => setShowSetupModal(true)}
-              className="w-full p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs text-left transition-colors flex items-center gap-2.5 text-slate-700"
-            >
-              <HelpCircle className="w-4 h-4 text-slate-500 flex-shrink-0" />
-              <div>
-                <div className="font-bold text-slate-900">Database Schema Info</div>
-                <div className="text-[10px] text-slate-500 font-medium">PostgreSQL Tables & Triggers</div>
+          <div className="pt-4 border-t border-slate-200">
+            <div className="px-1">
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">
+                CITE &apos;26
               </div>
-            </button>
+              <div className="text-[10px] text-slate-500 mt-0.5 font-medium">
+                12 December 2026 · Abbottabad
+              </div>
+            </div>
           </div>
         </aside>
 
@@ -284,70 +250,6 @@ export default function AdminPortal({ onBackToSite }) {
           </div>
         </main>
       </div>
-
-      {/* Database Setup Info Modal */}
-      {showSetupModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn"
-          onClick={() => setShowSetupModal(false)}
-        >
-          <div
-            className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden animate-scaleUp"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-          >
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
-              <div className="flex items-center gap-2.5">
-                <Database className="w-4 h-4 text-slate-700" />
-                <h3 className="text-sm font-bold text-slate-900 tracking-tight">
-                  Supabase Project Information
-                </h3>
-              </div>
-              <button
-                onClick={() => setShowSetupModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                aria-label="Close modal"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4 text-xs text-slate-600 leading-relaxed">
-              <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200/90 text-emerald-800">
-                <div className="font-bold text-emerald-900 mb-0.5">Database Connection Active</div>
-                <div className="font-mono text-[11px] text-emerald-800 break-all">
-                  {__SUPABASE_URL__}
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-bold text-slate-900 text-xs mb-1">Database Schema Reference</h4>
-                <p className="text-slate-500">
-                  All tables (`events`, `registrations`, `teams`, `ambassadors`, `announcements`, `audit_logs`, `admin_profiles`) and the capacity check trigger are configured in <code className="text-slate-900 font-mono bg-slate-100 px-1 py-0.5 rounded">supabase/schema.sql</code>.
-                </p>
-                <div className="mt-3">
-                  <button
-                    onClick={copySupabaseSql}
-                    className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold transition-all flex items-center gap-2 text-xs shadow-sm"
-                  >
-                    {copiedSql ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                    <span>{copiedSql ? 'Copied schema.sql to clipboard!' : 'Copy Schema SQL'}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-slate-50/80 px-6 py-3.5 border-t border-slate-100 flex justify-end">
-              <button
-                onClick={() => setShowSetupModal(false)}
-                className="px-4 py-2 bg-slate-200/80 hover:bg-slate-300 text-slate-800 rounded-xl font-semibold text-xs transition-colors"
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

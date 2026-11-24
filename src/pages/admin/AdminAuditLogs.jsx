@@ -48,7 +48,7 @@ export default function AdminAuditLogs() {
     setConfirmModal({
       isOpen: true,
       title: `Restore ${itemType.toUpperCase()}`,
-      message: `Restore "${title}" back to active database records?`,
+      message: `Restore "${title}" to active records?`,
       action: async () => {
         await adminService.restoreItem(itemType, id);
         setConfirmModal(prev => ({ ...prev, isOpen: false }));
@@ -141,7 +141,7 @@ export default function AdminAuditLogs() {
                     <tr>
                       <td colSpan={5} className="py-12 text-center text-slate-400">
                         <RefreshCw className="w-4 h-4 animate-spin text-slate-500 inline mr-2" />
-                        <span>Loading audit logs from Supabase...</span>
+                        <span>Loading audit logs…</span>
                       </td>
                     </tr>
                   ) : logs.length === 0 ? (
@@ -193,7 +193,7 @@ export default function AdminAuditLogs() {
                 <span>Soft-Deleted Records</span>
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                Items moved to trash retain their relationships and can be restored back to live database queries.
+                Items moved to trash retain their relationships and can be restored at any time.
               </p>
             </div>
             <span className="text-xs font-mono font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded border border-slate-200">

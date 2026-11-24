@@ -26,6 +26,19 @@
     color-scheme: dark;
   }
 
+  /* The admin portal is a light interface. Without this, native form
+     controls (select menus, date pickers) inherit the dark color-scheme
+     from :root and render white text on a white popup. */
+  .admin-theme {
+    color-scheme: light;
+  }
+
+  .admin-theme select,
+  .admin-theme select option {
+    color: #0f172a;
+    background-color: #ffffff;
+  }
+
   body {
     background-color: var(--color-canvas);
     color: var(--color-text-primary);

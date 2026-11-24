@@ -107,7 +107,8 @@ export default function AdminEvents() {
       setIsModalOpen(false);
       loadEvents();
     } catch (err) {
-      alert(`Error saving event to Supabase: ${err.message}`);
+      console.error('Error saving event:', err);
+      alert('Unable to save this event. Please try again.');
     }
   };
 
@@ -185,7 +186,7 @@ export default function AdminEvents() {
         {loading ? (
           <div className="col-span-full py-12 text-center text-slate-400">
             <RefreshCw className="w-5 h-5 animate-spin text-slate-500 mx-auto mb-2" />
-            <span>Loading events from database...</span>
+            <span>Loading events…</span>
           </div>
         ) : events.length === 0 ? (
           <div className="col-span-full py-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200 shadow-sm">

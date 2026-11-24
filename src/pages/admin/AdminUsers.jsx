@@ -48,7 +48,7 @@ export default function AdminUsers({ currentAdmin }) {
     setConfirmModal({
       isOpen: true,
       title: 'Revoke Admin Privileges',
-      message: `Revoke admin access for "${email}"? They will lose access to the portal immediately. Their Supabase login account is left untouched.`,
+      message: `Revoke admin access for "${email}"? They will lose access to the portal immediately. Their sign-in credentials remain unchanged.`,
       isDestructive: true,
       action: async () => {
         await adminService.removeAdmin(adminId);
@@ -66,13 +66,10 @@ export default function AdminUsers({ currentAdmin }) {
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
         <h2 className="text-xl font-bold text-slate-900 tracking-tight flex flex-wrap items-center gap-2">
           <ShieldCheck className="w-5 h-5 text-slate-700" />
-          <span>Admin Users & Access Control</span>
-          <span className="text-xs font-mono font-bold bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full border border-slate-200">
-            Database Provisioned
-          </span>
+          <span>Admin Users &amp; Access Control</span>
         </h2>
         <p className="text-xs text-slate-500 mt-1">
-          Review administrator roles and revoke portal access. Accounts are created in Supabase, not by email invitation.
+          Review administrator roles and manage portal access.
         </p>
       </div>
 
@@ -82,7 +79,7 @@ export default function AdminUsers({ currentAdmin }) {
         <div>
           <div className="font-bold text-slate-900 mb-0.5">Adding a new administrator</div>
           <p className="leading-relaxed">
-            Run <code className="bg-white border border-slate-200 px-1 py-0.5 rounded font-mono text-[11px]">supabase/create-university-admin.sql</code> in the Supabase SQL Editor with the new account details, then hand the credentials to that person directly.
+            New administrator accounts are provisioned by the organizing committee. Contact the CITE &apos;26 technical team to request access for a team member.
           </p>
         </div>
       </div>
@@ -107,7 +104,7 @@ export default function AdminUsers({ currentAdmin }) {
               <li>Manage and revoke administrator accounts</li>
               <li>Configure event capacities &amp; deadlines</li>
               <li>Broadcast mass announcements to participants</li>
-              <li>Purge or restore soft-deleted audit records</li>
+              <li>Restore or permanently delete archived records</li>
               <li>Approve, reject, and export all registrations</li>
             </ul>
           </div>
@@ -126,7 +123,7 @@ export default function AdminUsers({ currentAdmin }) {
               <li>Verify student IDs and teams</li>
               <li>View campus ambassadors &amp; referral counts</li>
               <li>Export CSV rosters for on-desk check-in</li>
-              <li>View live dashboard statistics</li>
+              <li>View dashboard statistics</li>
             </ul>
           </div>
         </div>
@@ -149,7 +146,7 @@ export default function AdminUsers({ currentAdmin }) {
                 <th className="py-3 px-4">Admin Name</th>
                 <th className="py-3 px-4">Assigned Role</th>
                 <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4">Provisioned By</th>
+                <th className="py-3 px-4">Added By</th>
                 <th className="py-3 px-4">Account Created</th>
                 {isSuperAdmin && <th className="py-3 px-4 text-right">Actions</th>}
               </tr>
@@ -159,13 +156,13 @@ export default function AdminUsers({ currentAdmin }) {
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">
                     <RefreshCw className="w-4 h-4 animate-spin text-slate-500 inline mr-2" />
-                    <span>Loading admin accounts from Supabase...</span>
+                    <span>Loading admin accounts…</span>
                   </td>
                 </tr>
               ) : admins.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">
-                    No administrator accounts found. Run the provisioning SQL to create them.
+                    No administrator accounts found.
                   </td>
                 </tr>
               ) : (
@@ -196,8 +193,8 @@ export default function AdminUsers({ currentAdmin }) {
                         )}
                       </td>
                       <td className="py-3.5 px-4">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-slate-100 text-slate-700 border border-slate-200">
-                          active
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          Active
                         </span>
                       </td>
                       <td className="py-3.5 px-4 text-slate-600 font-mono">

@@ -95,7 +95,8 @@ export default function AdminCommunication() {
       const history = await adminService.getAnnouncements();
       setAnnouncements(history);
     } catch (err) {
-      setTestSentError(err.message || 'Email delivery failed. Check Resend configuration.');
+      console.error('Test email delivery failed:', err);
+      setTestSentError('Email delivery failed. Please verify the recipient address and try again.');
       setTimeout(() => setTestSentError(null), 10000);
     } finally {
       setLoading(false);
@@ -127,9 +128,10 @@ export default function AdminCommunication() {
           setBody('');
           const history = await adminService.getAnnouncements();
           setAnnouncements(history);
-          alert('Announcement logged and dispatched successfully!');
+          alert('Announcement dispatched successfully!');
         } catch (err) {
-          alert(`Error sending: ${err.message}`);
+          console.error('Announcement dispatch failed:', err);
+          alert('Unable to send this announcement. Please try again.');
         } finally {
           setLoading(false);
         }
@@ -150,11 +152,11 @@ export default function AdminCommunication() {
                 ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                 : 'bg-amber-50 text-amber-800 border-amber-200'
             }`}>
-              {emailConfigured ? 'Resend Live (Real Inboxes)' : 'Set RESEND_API_KEY on the server'}
+              {emailConfigured ? 'Email Delivery Active' : 'Email Delivery Unavailable'}
             </span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Automated transactional notifications, group broadcasts, and real-time delivery logs.
+            Automated notifications, group broadcasts, and delivery history.
           </p>
         </div>
 
@@ -342,12 +344,9 @@ export default function AdminCommunication() {
                 <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs space-y-1 animate-fadeIn">
                   <div className="flex items-center gap-1.5 font-bold">
                     <AlertTriangle className="w-4 h-4 flex-shrink-0 text-red-600" />
-                    <span>Resend Delivery Failed</span>
+                    <span>Email Delivery Failed</span>
                   </div>
                   <p className="leading-relaxed">{testSentError}</p>
-                  {testSentError.toLowerCase().includes('domain') || testSentError.toLowerCase().includes('verified') ? (
-                    <p className="text-red-700 font-medium">Your sender domain is not verified in Resend. Set <code className="bg-red-100 px-1 rounded">EMAIL_FROM=onboarding@resend.dev</code> on the server, or verify your domain at resend.com/domains.</p>
-                  ) : null}
                 </div>
               )}
             </div>

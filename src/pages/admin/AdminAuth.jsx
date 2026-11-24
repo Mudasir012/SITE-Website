@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import {
-  ShieldCheck,
-  Shield,
   Mail,
   Lock,
   ArrowRight,
@@ -14,7 +12,6 @@ import { adminService } from '../../lib/supabase';
 
 export default function AdminAuth({ onLoginSuccess, onBackToSite }) {
   const [mode, setMode] = useState('login'); // 'login' | 'forgot'
-  const [selectedRole, setSelectedRole] = useState('super_admin'); // 'super_admin' | 'admin'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,21 +26,21 @@ export default function AdminAuth({ onLoginSuccess, onBackToSite }) {
 
     try {
       if (mode === 'login') {
-        const admin = await adminService.login(email, password, selectedRole);
+        const admin = await adminService.login(email, password);
         onLoginSuccess(admin);
       } else {
         await adminService.resetPassword(email);
         setMessage('Password reset email has been sent. Please check your inbox.');
       }
     } catch (err) {
-      setError(err.message || 'Authentication error. Please check your Supabase credentials.');
+      setError(err.message || 'Unable to sign in. Please check your email and password and try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center p-4 relative font-sans">
+    <div className="admin-theme min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center p-4 relative font-sans">
       {/* Background Subtle Grid */}
       <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:20px_20px] opacity-70 pointer-events-none" />
 
@@ -51,19 +48,23 @@ export default function AdminAuth({ onLoginSuccess, onBackToSite }) {
         {/* Header */}
         <div className="flex justify-between items-start mb-6 pb-6 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white shadow-sm">
-              <ShieldCheck className="w-5 h-5 text-amber-400" />
+            <div className="w-10 h-10 flex items-center justify-center">
+              <img
+                src="/CUI%20Logo.png"
+                alt="COMSATS University Islamabad"
+                className="h-10 w-10 object-contain"
+              />
             </div>
             <div>
               <h1 className="text-lg font-bold tracking-tight text-slate-900">
                 {mode === 'forgot' ? 'Reset Password' : 'Admin Portal Login'}
               </h1>
-              <p className="text-xs text-slate-500 font-medium">COMSATS University Abbottabad</p>
+              <p className="text-xs text-slate-500 font-medium">CITE &apos;26 · CUI Abbottabad</p>
             </div>
           </div>
           <button
             onClick={onBackToSite}
-            className="text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors py-1.5 px-3 rounded-lg hover:bg-slate-100 border border-transparent hover:border-slate-200"
+            className="text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors py-1.5 px-3 rounded-lg hover:bg-slate-100 border border-transparent hover:border-slate-200 whitespace-nowrap"
           >
             ← Public Site
           </button>
@@ -80,46 +81,6 @@ export default function AdminAuth({ onLoginSuccess, onBackToSite }) {
           <div className="mb-5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2.5 animate-fadeIn">
             <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-600" />
             <span>{message}</span>
-          </div>
-        )}
-
-        {/* ── Role Selector Segmented Control (Visible on Login) ── */}
-        {mode === 'login' && (
-          <div className="mb-5">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-              Sign In Role
-            </label>
-            <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200">
-              <button
-                type="button"
-                onClick={() => setSelectedRole('super_admin')}
-                className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                  selectedRole === 'super_admin'
-                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/80'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                <ShieldCheck className={`w-3.5 h-3.5 ${selectedRole === 'super_admin' ? 'text-amber-500' : 'text-slate-400'}`} />
-                <span>Super Admin</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedRole('admin')}
-                className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                  selectedRole === 'admin'
-                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/80'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                <Shield className={`w-3.5 h-3.5 ${selectedRole === 'admin' ? 'text-emerald-600' : 'text-slate-400'}`} />
-                <span>Event Admin</span>
-              </button>
-            </div>
-            <p className="text-[11px] text-slate-400 mt-1.5 px-0.5">
-              {selectedRole === 'super_admin'
-                ? 'Requires Super Admin privileges (Full authorization, user management).'
-                : 'Event Admin access (Registrations, teams verification & CSV exports).'}
-            </p>
           </div>
         )}
 
@@ -178,7 +139,7 @@ export default function AdminAuth({ onLoginSuccess, onBackToSite }) {
               <RefreshCw className="w-4 h-4 animate-spin" />
             ) : mode === 'login' ? (
               <>
-                <span>Sign In as {selectedRole === 'super_admin' ? 'Super Admin' : 'Event Admin'}</span>
+                <span>Sign In</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             ) : (
