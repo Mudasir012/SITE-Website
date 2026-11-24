@@ -45,7 +45,6 @@ export const event = {
     established: '2001',
     department: 'Department of Computer Science',
     society: 'CITE Society',
-    badges: ['HEC Recognized', 'NCEAC Accredited', 'Dept. of Computer Science', '40+ Universities'],
     facts: [
       {
         icon: 'GraduationCap',

@@ -6,7 +6,6 @@ import {
   Landmark,
   MapPin,
   Users,
-  ShieldCheck,
 } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import CountUp from '../components/CountUp.jsx';
@@ -20,17 +19,7 @@ import EventCard from '../components/EventCard.jsx';
 import { event } from '../data/event.js';
 import { events } from '../data/tracks.js';
 
-// ── Thumbtack SVG (decorative pin holding the hero card) ──
-function Thumbtack({ className = '' }) {
-  return (
-    <svg className={`w-7 h-7 ${className}`} viewBox="0 0 28 36" fill="none">
-      <circle cx="14" cy="12" r="10" fill="#C0392B" stroke="#922B21" strokeWidth="1.2" />
-      <circle cx="11" cy="9"  r="3"  fill="rgba(255,255,255,0.3)" />
-      <line   x1="14" y1="22" x2="14" y2="36" stroke="#7F8C8D" strokeWidth="2.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
+// ── Hand-drawn underline beneath the hero title ──
 function HandUnderline({ className = '' }) {
   const reduced = useReducedMotion();
 
@@ -168,11 +157,6 @@ export default function HomePage({ onNavigate }) {
           <PaperPlane size="sm" flightTrail={false} />
         </div>
 
-        {/* ── Thumbtack holding the title area ── */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-6 z-20 hidden sm:block">
-          <Thumbtack />
-        </div>
-
         <motion.div
           className="wrap relative z-10 text-center"
           initial="hidden"
@@ -215,16 +199,6 @@ export default function HomePage({ onNavigate }) {
             <p className="mt-3 font-mono text-xs sm:text-sm text-sand-300/80 font-medium">
               COMSATS University Islamabad, Abbottabad Campus
             </p>
-            <div className="mt-3 flex flex-wrap items-center justify-center gap-2 font-mono text-[11px] uppercase tracking-wider text-sand-300/70">
-              {event.university.badges.map((badge) => (
-                <span
-                  key={badge}
-                  className="rounded border border-navy-700/60 bg-navy-850/60 px-2 py-1"
-                >
-                  {badge}
-                </span>
-              ))}
-            </div>
           </motion.div>
 
           <motion.div variants={item} className="mt-10 flex flex-col items-center justify-center">
@@ -248,15 +222,6 @@ export default function HomePage({ onNavigate }) {
                 Explore Competitions &amp; Tracks
               </Button>
             </div>
-            
-            <button
-              type="button"
-              onClick={() => onNavigate('admin', '#/admin')}
-              className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono font-medium text-sand-300/70 hover:text-gold-300 bg-navy-950/50 hover:bg-navy-900 border border-sand-400/20 hover:border-gold-400/40 transition-all shadow-sm"
-            >
-              <ShieldCheck className="h-3.5 w-3.5 text-gold-400" />
-              <span>Organizer &amp; Admin Portal &rarr;</span>
-            </button>
           </motion.div>
 
           <motion.div variants={item} className="mt-10 flex justify-center opacity-70">
