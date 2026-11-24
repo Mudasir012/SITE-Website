@@ -134,7 +134,7 @@ export const adminService = {
   async resetPassword(email) {
     if (!supabase) throw new Error('The admin portal is temporarily unavailable. Please try again shortly.');
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/#/admin`,
+      redirectTo: `${window.location.origin}/admin`,
     });
     if (error) throw error;
     await logAudit(email, 'PASSWORD_RESET_REQUESTED', 'auth', email, { email });

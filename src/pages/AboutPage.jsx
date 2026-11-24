@@ -97,7 +97,7 @@ export default function AboutPage({ onNavigate }) {
               </a>
               <button
                 type="button"
-                onClick={() => onNavigate('tracks', '#/tracks')}
+                onClick={() => onNavigate('tracks', '/tracks')}
                 className="inline-flex items-center gap-2 border-b border-white/40 pb-1 font-display text-xs font-bold uppercase tracking-[0.18em] text-arcade-bone transition-colors hover:border-arcade-violet hover:text-arcade-violet focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-violet focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-ink"
               >
                 Explore all 19 events
@@ -336,7 +336,7 @@ export default function AboutPage({ onNavigate }) {
                 </a>
                 <button
                   type="button"
-                  onClick={() => onNavigate('tracks', '#/tracks')}
+                  onClick={() => onNavigate('tracks', '/tracks')}
                   className="inline-flex items-center gap-2 border-b border-white/40 pb-1 font-display text-xs font-bold uppercase tracking-[0.16em] text-arcade-bone transition-colors hover:border-arcade-violet hover:text-arcade-violet"
                 >
                   See the event lineup

@@ -3,11 +3,11 @@ import { ArrowUpRight, Menu, X } from 'lucide-react';
 import { event } from '../data/event.js';
 
 export const PAGES = [
-  { id: 'home', label: 'Home', path: '#/' },
-  { id: 'about', label: 'About', path: '#/about' },
-  { id: 'tracks', label: 'Events', path: '#/tracks' },
-  { id: 'schedule', label: 'Schedule', path: '#/schedule' },
-  { id: 'faq', label: 'FAQ', path: '#/faq' },
+  { id: 'home', label: 'Home', path: '/' },
+  { id: 'about', label: 'About', path: '/about' },
+  { id: 'tracks', label: 'Events', path: '/tracks' },
+  { id: 'schedule', label: 'Schedule', path: '/schedule' },
+  { id: 'faq', label: 'FAQ', path: '/faq' },
 ];
 
 const focusRing =
@@ -27,7 +27,7 @@ export default function Navbar({ activePage, onNavigate }) {
         {/* Brand */}
         <button
           type="button"
-          onClick={() => navigate('home', '#/')}
+          onClick={() => navigate('home', '/')}
           className={`group flex shrink-0 items-center ${focusRing}`}
           aria-label="CITE 2026 — home"
         >

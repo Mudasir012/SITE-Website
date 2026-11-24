@@ -18,7 +18,7 @@ export default function Footer({ onNavigate }) {
         <div className="sm:col-span-2 lg:col-span-1">
           <button
             type="button"
-            onClick={() => onNavigate('home', '#/')}
+            onClick={() => onNavigate('home', '/')}
             aria-label="CITE 2026 — home"
             className="group flex shrink-0 items-center text-left"
           >

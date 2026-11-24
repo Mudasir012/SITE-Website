@@ -11,33 +11,44 @@ const SchedulePage = lazy(() => import('./pages/SchedulePage.jsx'));
 const FaqPage = lazy(() => import('./pages/FaqPage.jsx'));
 const AdminPortal = lazy(() => import('./pages/admin/AdminPortal.jsx'));
 
-// Map hash to page id
-function getPageFromHash() {
-  const clean = window.location.hash.replace('#/', '').replace('#', '').trim().split('?')[0];
-  if (['about', 'tracks', 'schedule', 'faq', 'admin'].includes(clean)) {
-    return clean;
+const ROUTES = ['about', 'tracks', 'schedule', 'faq', 'admin'];
+
+// Map a clean URL path to a page id, with support for a deployed base path.
+function getPageFromPath() {
+  const basePath = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '');
+  let path = window.location.pathname;
+
+  if (basePath && path.startsWith(basePath)) {
+    path = path.slice(basePath.length);
   }
-  return 'home';
+
+  const clean = path.replace(/^\/+/, '').split('/')[0].replace(/\.html$/, '');
+  return ROUTES.includes(clean) ? clean : 'home';
 }
 
 export default function App() {
-  const [activePage, setActivePage] = useState(() => getPageFromHash());
+  const [activePage, setActivePage] = useState(() => getPageFromPath());
 
-  // Listen to hash changes (browser back/forward button)
+  // Follow browser back/forward navigation.
   useEffect(() => {
-    const handleHashChange = () => {
-      const page = getPageFromHash();
-      setActivePage(page);
+    const handlePopState = () => {
+      setActivePage(getPageFromPath());
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const handleNavigate = (pageId, path) => {
+  const handleNavigate = (pageId) => {
+    const basePath = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+    const nextPath = pageId === 'home' ? `${basePath}/` : `${basePath}/${pageId}`;
+
+    if (window.location.pathname !== nextPath) {
+      window.history.pushState({ page: pageId }, '', nextPath);
+    }
+
     setActivePage(pageId);
-    window.location.hash = path;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -54,7 +65,7 @@ export default function App() {
       case 'faq':
         return <FaqPage onNavigate={handleNavigate} />;
       case 'admin':
-        return <AdminPortal onBackToSite={() => handleNavigate('home', '#/')} />;
+        return <AdminPortal onBackToSite={() => handleNavigate('home', '/')} />;
       case 'home':
       default:
         return <HomePage onNavigate={handleNavigate} />;

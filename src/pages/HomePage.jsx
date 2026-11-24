@@ -262,7 +262,7 @@ function DayRoute({ onNavigate }) {
           </div>
           <button
             type="button"
-            onClick={() => onNavigate('schedule', '#/schedule')}
+            onClick={() => onNavigate('schedule', '/schedule')}
             className="mt-10 inline-flex items-center gap-2 border-b border-arcade-lime pb-1 font-display text-xs font-bold uppercase tracking-[0.18em] text-arcade-bone transition-colors hover:text-arcade-lime focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-lime focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-coal"
           >
             See the full schedule
@@ -298,7 +298,7 @@ function ArenaSection({ onNavigate }) {
           <Reveal delay={0.12}>
             <button
               type="button"
-              onClick={() => onNavigate('tracks', '#/tracks')}
+              onClick={() => onNavigate('tracks', '/tracks')}
               className="inline-flex items-center gap-2 self-start border-b border-arcade-lime pb-1 font-display text-xs font-bold uppercase tracking-[0.18em] text-arcade-bone transition-colors hover:text-arcade-lime focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-lime focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-ink lg:self-auto"
             >
               View all 19 events
@@ -312,7 +312,7 @@ function ArenaSection({ onNavigate }) {
             <motion.button
               key={item.name}
               type="button"
-              onClick={() => onNavigate('tracks', '#/tracks')}
+              onClick={() => onNavigate('tracks', '/tracks')}
               whileHover={reduced ? undefined : { rotateY: 5, rotateX: -4, y: -8 }}
               transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
               style={{ transformStyle: 'preserve-3d' }}
@@ -388,7 +388,7 @@ function CampusSection({ onNavigate }) {
           <Reveal delay={0.22}>
             <button
               type="button"
-              onClick={() => onNavigate('about', '#/about')}
+              onClick={() => onNavigate('about', '/about')}
               className="mt-9 inline-flex items-center gap-2 border-b border-arcade-lime pb-1 font-display text-xs font-bold uppercase tracking-[0.18em] text-arcade-bone transition-colors hover:text-arcade-lime focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-lime focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-coal"
             >
               Read the campus story
@@ -543,7 +543,7 @@ export default function HomePage({ onNavigate }) {
             <motion.div variants={item} className="mt-8">
               <button
                 type="button"
-                onClick={() => onNavigate('tracks', '#/tracks')}
+                onClick={() => onNavigate('tracks', '/tracks')}
                 className="inline-flex items-center gap-2 border-b border-white/40 pb-1 font-display text-xs font-bold uppercase tracking-[0.18em] text-arcade-bone transition-colors hover:border-arcade-lime hover:text-arcade-lime focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-lime focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-ink"
               >
                 Explore all 19 events
