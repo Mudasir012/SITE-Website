@@ -335,7 +335,7 @@ function ArenaSection({ onNavigate }) {
               <span className="relative flex h-full min-h-[230px] flex-col justify-between p-4 sm:min-h-[280px] sm:p-5 lg:min-h-[320px]" style={{ transform: 'translateZ(28px)' }}>
                 <span
                   className={`inline-flex w-fit px-2.5 py-1 font-display text-[9px] font-bold uppercase tracking-[0.18em] ${
-                    item.code === 'A' ? 'bg-arcade-violet text-white' : 'bg-arcade-limeHot text-arcade-ink'
+                    item.code === 'A' ? 'bg-arcade-violet text-white' : 'bg-arcade-limeHot text-white'
                   }`}
                 >
                   {item.code === 'A' ? 'Computer science' : 'Fun & esports'}
