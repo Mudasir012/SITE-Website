@@ -88,7 +88,7 @@ export default function Footer({ onNavigate }) {
                 rel="noopener noreferrer"
                 className="font-bold text-arcade-lime transition-colors hover:text-white"
               >
-                Register Online →
+                Register as an Ambassador →
               </a>
             </li>
           </ul>
