@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowUpRight, Menu, X } from 'lucide-react';
 import { event } from '../data/event.js';
+import { prefetchPage } from '../App.jsx';
 
 export const PAGES = [
   { id: 'home', label: 'Home', path: '/' },
@@ -53,6 +54,8 @@ export default function Navbar({ activePage, onNavigate }) {
                 <button
                   type="button"
                   onClick={() => navigate(page.id, page.path)}
+                  onMouseEnter={() => prefetchPage(page.id)}
+                  onFocus={() => prefetchPage(page.id)}
                   aria-current={isActive ? 'page' : undefined}
                   className={`border-b-2 px-3 py-1.5 text-[13px] font-semibold transition-colors duration-200 ${focusRing} ${
                     isActive

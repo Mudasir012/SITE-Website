@@ -5,11 +5,24 @@ import Footer from './sections/Footer.jsx';
 import PageTransition from './components/PageTransition.jsx';
 import HomePage from './pages/HomePage.jsx';
 
-const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
-const TracksPage = lazy(() => import('./pages/TracksPage.jsx'));
-const SchedulePage = lazy(() => import('./pages/SchedulePage.jsx'));
-const FaqPage = lazy(() => import('./pages/FaqPage.jsx'));
-const AdminPortal = lazy(() => import('./pages/admin/AdminPortal.jsx'));
+const pageLoaders = {
+  about: () => import('./pages/AboutPage.jsx'),
+  tracks: () => import('./pages/TracksPage.jsx'),
+  schedule: () => import('./pages/SchedulePage.jsx'),
+  faq: () => import('./pages/FaqPage.jsx'),
+  admin: () => import('./pages/admin/AdminPortal.jsx'),
+};
+
+const AboutPage = lazy(pageLoaders.about);
+const TracksPage = lazy(pageLoaders.tracks);
+const SchedulePage = lazy(pageLoaders.schedule);
+const FaqPage = lazy(pageLoaders.faq);
+const AdminPortal = lazy(pageLoaders.admin);
+
+export function prefetchPage(pageId) {
+  const loader = pageLoaders[pageId];
+  if (loader) loader();
+}
 
 const ROUTES = ['about', 'tracks', 'schedule', 'faq', 'admin'];
 
@@ -40,6 +53,18 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  // Prefetch public route chunks once the browser is idle so navigation feels instant.
+  useEffect(() => {
+    const publicRoutes = ['about', 'tracks', 'schedule', 'faq'];
+    const prefetchAll = () => publicRoutes.forEach(prefetchPage);
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(prefetchAll, { timeout: 2000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const timer = setTimeout(prefetchAll, 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleNavigate = (pageId) => {
     const basePath = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
     const nextPath = pageId === 'home' ? `${basePath}/` : `${basePath}/${pageId}`;
@@ -49,7 +74,7 @@ export default function App() {
     }
 
     setActivePage(pageId);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'auto' });
   };
 
   const isAdmin = activePage === 'admin';

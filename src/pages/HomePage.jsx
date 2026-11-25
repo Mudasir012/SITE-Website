@@ -15,6 +15,11 @@ import { eventSchedule } from '../data/schedule.js';
 
 const pad = (value) => String(value).padStart(2, '0');
 
+const HERO_SLIDES = [
+  '/Slideshow%20Images/slide-1.webp',
+  '/Slideshow%20Images/slide-2.webp',
+];
+
 const featuredEvents = [events[0], events[9], events[4], events[2], events[10], events[14]].filter(Boolean);
 
 const dayMoments = [
@@ -460,10 +465,19 @@ function ClosingCTA() {
 
 export default function HomePage({ onNavigate }) {
   const reduced = useReducedMotion();
+  const [slideIndex, setSlideIndex] = useState(0);
   const { scrollY } = useScroll();
-  const heroVideoY = useTransform(scrollY, [0, 700], [0, 60]);
+  const heroMediaY = useTransform(scrollY, [0, 700], [0, 60]);
   const heroCopyY = useTransform(scrollY, [0, 600], [0, -48]);
   const heroCopyOpacity = useTransform(scrollY, [0, 450], [1, 0.4]);
+
+  useEffect(() => {
+    if (HERO_SLIDES.length <= 1) return undefined;
+    const id = setInterval(() => {
+      setSlideIndex((current) => (current + 1) % HERO_SLIDES.length);
+    }, 4000);
+    return () => clearInterval(id);
+  }, []);
   const item = reduced
     ? { hidden: { opacity: 1 }, show: { opacity: 1 } }
     : {
@@ -475,24 +489,34 @@ export default function HomePage({ onNavigate }) {
     <div className="bg-arcade-ink font-display text-arcade-bone">
       <RouteRail />
 
-      <section className="relative isolate flex min-h-[100svh] overflow-hidden bg-arcade-ink">
-        <motion.video
-          aria-hidden="true"
-          className="absolute inset-0 -z-20 h-full w-full object-cover"
-          style={reduced ? undefined : { y: heroVideoY, scale: 1.15 }}
-          autoPlay={!reduced}
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          poster="/hero-poster.jpg"
-        >
-          <source src="/hero-campus.mp4" type="video/mp4" />
-        </motion.video>
-        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-black/82" />
+      <section className="relative isolate flex min-h-[calc(100svh-4rem)] overflow-hidden bg-arcade-ink sm:min-h-[calc(100svh-4.5rem)]">
+        <div aria-hidden="true" className="absolute inset-0 -z-20 overflow-hidden">
+          {HERO_SLIDES.map((src, index) => (
+            <motion.img
+              key={src}
+              src={src}
+              alt=""
+              loading={index === 0 ? 'eager' : 'lazy'}
+              fetchPriority={index === 0 ? 'high' : 'low'}
+              decoding="async"
+              className="absolute inset-0 h-full w-full object-cover"
+              style={reduced ? undefined : { y: heroMediaY }}
+              initial={false}
+              animate={{
+                opacity: index === slideIndex ? 1 : 0,
+                scale: reduced ? 1.05 : index === slideIndex ? 1.08 : 1.14,
+              }}
+              transition={{
+                opacity: { duration: 1.2, ease: 'easeInOut' },
+                scale: { duration: 6, ease: 'easeOut' },
+              }}
+            />
+          ))}
+        </div>
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-black/75" />
 
         <motion.div
-          className="wrap relative z-10 flex min-h-[100svh] w-full flex-col justify-between pb-0 pt-28 sm:pt-32"
+          className="wrap relative z-10 flex min-h-[calc(100svh-4rem)] w-full flex-col justify-between pb-0 pt-8 sm:min-h-[calc(100svh-4.5rem)] sm:pt-10"
           style={reduced ? undefined : { y: heroCopyY, opacity: heroCopyOpacity }}
           initial="hidden"
           animate="show"
@@ -512,7 +536,7 @@ export default function HomePage({ onNavigate }) {
             </p>
           </motion.div>
 
-          <div className="py-16 lg:py-20">
+          <div className="py-8 sm:py-10 lg:py-12">
             <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
               <motion.h1
                 variants={item}
@@ -559,7 +583,7 @@ export default function HomePage({ onNavigate }) {
               { label: 'Campus', value: 'CUI Abbottabad' },
               { label: 'Events', value: '19 competitions' },
             ].map((fact) => (
-              <div key={fact.label} className="border-b border-white/20 px-1 py-5 sm:px-4 lg:border-b-0 lg:border-r">
+              <div key={fact.label} className="border-b border-white/20 px-1 py-3.5 sm:px-4 sm:py-4 lg:border-b-0 lg:border-r">
                 <p className="font-display text-[9px] font-bold uppercase tracking-[0.2em] text-arcade-mute">
                   {fact.label}
                 </p>
@@ -568,7 +592,7 @@ export default function HomePage({ onNavigate }) {
                 </p>
               </div>
             ))}
-            <div className="col-span-2 flex items-center justify-start px-1 py-5 sm:px-4 lg:col-span-1 lg:border-b-0 lg:justify-end">
+            <div className="col-span-2 flex items-center justify-start px-1 py-3.5 sm:px-4 sm:py-4 lg:col-span-1 lg:border-b-0 lg:justify-end">
               <TicketLink href={event.registrationUrl}>Register now</TicketLink>
             </div>
           </motion.div>

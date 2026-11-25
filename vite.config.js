@@ -84,6 +84,14 @@ export default defineConfig(({ mode }) => {
     build: {
       target: 'es2019',
       cssCodeSplit: true,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'react-vendor': ['react', 'react-dom'],
+            'motion-vendor': ['framer-motion'],
+          },
+        },
+      },
     },
   };
 });
