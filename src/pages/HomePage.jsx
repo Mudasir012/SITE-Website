@@ -224,8 +224,8 @@ function DayRoute({ onNavigate }) {
             style={{ fontSize: 'clamp(2.8rem, 6vw, 5.5rem)' }}
           />
           <Reveal className="mt-7 max-w-xl font-display text-base leading-relaxed text-arcade-mute sm:text-lg" delay={0.12}>
-            Check in at eight, form a team, choose an arena, and ship something real before the
-            final showcase at six. Every hour has a purpose.
+            Check in at nine, form a team, choose an arena, and ship something real before the
+            final showcase at five. Every hour has a purpose.
           </Reveal>
           <Reveal className="mt-10" delay={0.2}>
             <CountdownStrip />

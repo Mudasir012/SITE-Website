@@ -246,9 +246,9 @@ export default function SchedulePage() {
             className="mt-10 grid gap-px border border-white/10 bg-white/10 sm:grid-cols-3"
           >
             {[
-              { label: 'Doors open', value: '08:30', note: 'Check-in begins' },
+              { label: 'Doors open', value: '09:00', note: 'Check-in begins' },
               { label: 'Sessions', value: String(eventSchedule.sessions.length).padStart(2, '0'), note: 'One campus day' },
-              { label: 'Last call', value: '20:00', note: 'Group photography' },
+              { label: 'Last call', value: '18:00', note: 'Program concludes' },
             ].map((stat) => (
               <div key={stat.label} className="bg-arcade-ink p-5">
                 <p className="font-display text-[9px] font-bold uppercase tracking-[0.18em] text-arcade-mute">
@@ -340,8 +340,8 @@ export default function SchedulePage() {
                 />
               </div>
               <div className="mt-3 flex justify-between font-display text-[9px] font-bold uppercase tracking-[0.16em] text-arcade-mute">
-                <span>08:30</span>
-                <span>20:00</span>
+                <span>09:00</span>
+                <span>18:00</span>
               </div>
               <p className="mt-10 font-display text-[10px] uppercase tracking-[0.2em] text-white/35">
                 Scroll to move through the day

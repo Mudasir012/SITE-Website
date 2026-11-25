@@ -9,7 +9,7 @@ export const event = {
 
   // ISO 8601 with timezone (+05:00 = Pakistan Standard Time).
   startDate: '2026-12-12T09:00:00+05:00',
-  endDate: '2026-12-12T20:00:00+05:00',
+  endDate: '2026-12-12T18:00:00+05:00',
 
   dateLabel: 'December 12, 2026',
   venue: 'COMSATS University Islamabad, Abbottabad Campus',
@@ -31,7 +31,7 @@ export const event = {
   stats: [
     { value: 800, suffix: '+', label: 'Participants' },
     { value: 150, suffix: '+', label: 'Teams' },
-    { value: 11, suffix: ' hrs', label: 'Full-Day Competition' },
+    { value: 9, suffix: ' hrs', label: 'Full-Day Competition' },
   ],
 
   university: {

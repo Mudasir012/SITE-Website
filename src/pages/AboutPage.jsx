@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Award,
   ArrowRight,
   ArrowUpRight,
   CheckCircle2,
   GraduationCap,
-  Landmark,
   MapPin,
   Users,
 } from 'lucide-react';
@@ -18,8 +16,6 @@ const checklistItems = [
   'Pick an event from our 18-competition lineup',
   'Pack your laptop, chargers, and valid student ID card or CNIC',
 ];
-
-const factIcons = { GraduationCap, Landmark, Award };
 
 const ticketBase =
   'group inline-flex items-center justify-center gap-3 bg-arcade-lime px-6 py-4 text-[11px] font-bold uppercase tracking-[0.18em] text-arcade-ink transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-bone focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-ink';
@@ -245,47 +241,6 @@ export default function AboutPage({ onNavigate }) {
                 </a>
               </div>
             </Reveal>
-          </div>
-        </div>
-      </section>
-
-      {/* Campus facts — editorial rows, not Home's folded tiles */}
-      <section className="bg-arcade-ink py-24 sm:py-32">
-        <div className="wrap">
-          <RevealHeading
-            lines={[
-              { text: 'One campus.' },
-              { text: 'A whole competition.', tone: 'violet' },
-            ]}
-            className="font-display font-bold uppercase leading-[0.9] tracking-[-0.05em] text-arcade-bone"
-            style={{ fontSize: 'clamp(2.8rem, 6vw, 5.2rem)' }}
-          />
-          <Reveal className="mt-7 max-w-2xl font-display text-base leading-relaxed text-arcade-mute sm:text-lg" delay={0.1}>
-            {event.university.name}, {event.university.campus}. A computing department, a student
-            society, and a whole campus turned into a one-day competition venue.
-          </Reveal>
-
-          <div className="mt-14 grid gap-px border border-white/10 bg-white/10 sm:grid-cols-3">
-            {event.university.facts.map((fact, index) => {
-              const Icon = factIcons[fact.icon] || GraduationCap;
-              return (
-                <Reveal key={fact.title} className="bg-arcade-coal p-6 sm:p-7" delay={index * 0.08}>
-                  <div className="flex items-center justify-between">
-                    <span className="font-display text-xs font-bold tabular-nums text-arcade-violet">
-                      0{index + 1}
-                    </span>
-                    <Icon className="h-5 w-5 text-arcade-bone/60" aria-hidden="true" />
-                  </div>
-                  <div className="mt-8 h-px w-10 bg-arcade-violet" />
-                  <h3 className="mt-5 font-display text-lg font-bold uppercase leading-tight tracking-[-0.03em] text-arcade-bone">
-                    {fact.title}
-                  </h3>
-                  <p className="mt-3 font-display text-sm leading-relaxed text-arcade-mute">
-                    {fact.description}
-                  </p>
-                </Reveal>
-              );
-            })}
           </div>
         </div>
       </section>
