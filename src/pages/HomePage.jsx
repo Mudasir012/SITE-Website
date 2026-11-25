@@ -123,15 +123,13 @@ function HeroPass() {
             className="absolute inset-x-0 top-0 flex h-20 items-center justify-between border-b border-black/30 bg-arcade-lime py-0 pl-5 pr-20 text-arcade-ink"
             style={{ transform: 'translateZ(18px)' }}
           >
-            <span className="grid h-11 w-11 place-items-center bg-arcade-ink">
+            <span className="flex h-11 items-center justify-center bg-arcade-ink px-2.5">
               <img
-                src="/CITE_White_Icon_Only.png"
+                src="/CITE%20New%20Logo.jpeg"
                 alt=""
-                width="32"
-                height="32"
                 loading="lazy"
                 decoding="async"
-                className="h-8 w-8 object-contain"
+                className="h-7 w-auto rounded-sm object-contain"
               />
             </span>
             <span className="font-display text-[10px] font-bold uppercase tracking-[0.22em]">Student pass</span>

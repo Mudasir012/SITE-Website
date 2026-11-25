@@ -23,20 +23,24 @@ export default function Navbar({ activePage, onNavigate }) {
 
   return (
     <header className="sticky top-0 z-50 bg-black font-display">
-      <nav aria-label="Primary" className="wrap flex h-14 items-center justify-between gap-6 sm:gap-8">
+      <nav aria-label="Primary" className="wrap flex h-16 items-center justify-between gap-4 sm:h-[72px] sm:gap-8">
         {/* Brand */}
         <button
           type="button"
           onClick={() => navigate('home', '/')}
-          className={`group flex shrink-0 items-center ${focusRing}`}
+          className={`group flex shrink-0 items-center gap-3 transition-transform duration-200 hover:scale-[1.02] sm:gap-3.5 ${focusRing}`}
           aria-label="CITE 2026 — home"
         >
           <img
-            src="/CITE_White_Icon_Only.png"
-            alt=""
-            width="44"
-            height="44"
-            className="h-10 w-10 object-contain transition-transform duration-200 group-hover:scale-105 sm:h-11 sm:w-11"
+            src="/CITE%20New%20Logo.jpeg"
+            alt="CITE 2026"
+            className="h-7 w-auto shrink-0 rounded-sm object-contain sm:h-8"
+          />
+          <span aria-hidden="true" className="h-6 w-0.5 rounded-full bg-white/80 sm:h-7" />
+          <img
+            src="/CUI%20Logo.png"
+            alt="COMSATS University Islamabad"
+            className="h-8 w-8 shrink-0 rounded-full object-contain sm:h-9 sm:w-9"
           />
         </button>
 

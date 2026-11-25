@@ -89,15 +89,13 @@ export default function EventCard({
             )}
           </motion.div>
           <span aria-hidden="true" className="absolute inset-0 bg-arcade-ink/25" />
-          <span aria-hidden="true" className="absolute right-3 top-3 grid h-7 w-7 place-items-center border border-white/15 bg-arcade-ink/80">
+          <span aria-hidden="true" className="absolute right-3 top-3 flex h-7 items-center justify-center border border-white/15 bg-arcade-ink/80 px-1.5">
             <img
-              src="/CITE_White_Icon_Only.png"
+              src="/CITE%20New%20Logo.jpeg"
               alt=""
-              width="20"
-              height="20"
               loading="lazy"
               decoding="async"
-              className="h-5 w-5 object-contain"
+              className="h-4 w-auto rounded-[1px] object-contain"
             />
           </span>
           <span aria-hidden="true" className={`absolute bottom-0 left-0 h-[3px] w-16 ${accent.block}`} />
