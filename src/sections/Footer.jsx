@@ -1,8 +1,8 @@
-import { Facebook, Github, Instagram, Linkedin, Mail, MapPin, Phone, Twitter, ArrowUp } from 'lucide-react';
+import { Instagram, Mail, MapPin, ArrowUp } from 'lucide-react';
 import { event } from '../data/event.js';
 import { PAGES } from './Navbar.jsx';
 
-const socialIcons = { Facebook, Instagram, Linkedin, Twitter, Github };
+const socialIcons = { Instagram };
 
 export default function Footer({ onNavigate }) {
   const year = new Date().getFullYear();
@@ -109,15 +109,6 @@ export default function Footer({ onNavigate }) {
                 <span>{event.contact.email}</span>
               </a>
             </li>
-            <li>
-              <a
-                href={`tel:${event.contact.phone.replace(/\s/g, '')}`}
-                className="flex items-center gap-2 transition-colors hover:text-white"
-              >
-                <Phone className="h-4 w-4 shrink-0 text-arcade-lime" aria-hidden="true" />
-                <span>{event.contact.phone}</span>
-              </a>
-            </li>
             <li className="flex items-start gap-2">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-arcade-lime" aria-hidden="true" />
               <span>{event.contact.address}</span>
@@ -129,7 +120,7 @@ export default function Footer({ onNavigate }) {
       {/* Sub-footer */}
       <div className="border-t border-white/10 py-6 font-display text-xs text-arcade-mute">
         <div className="wrap flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <p>© {year} CITE Society, COMSATS University Islamabad, Abbottabad Campus.</p>
+          <p>COMSATS Innovations And Tech Expo 2026 COMSATS University Islamabad, Abbottabad Campus.</p>
           <button
             type="button"
             onClick={scrollToTop}

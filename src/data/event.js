@@ -16,20 +16,16 @@ export const event = {
   venueShort: 'CUI Abbottabad Campus',
   city: 'Abbottabad, Pakistan',
 
-  registrationUrl: 'https://forms.gle/replace-with-your-form',
+  registrationUrl: 'https://docs.google.com/forms/d/e/1FAIpQLSexY_oBWawkkl_VnpwFKj1serx18AtJO_a5HVt4Ex9Z-6oLpw/viewform',
 
   contact: {
     email: 'cite@cuiatd.edu.pk',
     phone: '+92 992 0000000',
-    address: 'University Road, Tobe Camp, Abbottabad 22060, KP, Pakistan',
+    address: 'CUI Abbotabad, Dhamtour (SUB-CAMPUS), Abbottabad, Pakistan',
   },
 
   socials: [
-    { label: 'Facebook', href: 'https://facebook.com/', icon: 'Facebook' },
-    { label: 'Instagram', href: 'https://instagram.com/', icon: 'Instagram' },
-    { label: 'LinkedIn', href: 'https://linkedin.com/', icon: 'Linkedin' },
-    { label: 'X (Twitter)', href: 'https://x.com/', icon: 'Twitter' },
-    { label: 'GitHub', href: 'https://github.com/', icon: 'Github' },
+    { label: 'Instagram', href: 'https://www.instagram.com/cite.comsats/', icon: 'Instagram' },
   ],
 
   stats: [

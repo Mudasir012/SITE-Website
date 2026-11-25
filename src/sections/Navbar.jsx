@@ -78,8 +78,8 @@ export default function Navbar({ activePage, onNavigate }) {
             rel="noopener noreferrer"
             className={`inline-flex items-center gap-1.5 rounded-md bg-arcade-lime px-3.5 py-2 text-[11px] font-bold uppercase tracking-wider text-arcade-ink transition-colors hover:bg-white ${focusRing}`}
           >
-            <span className="hidden sm:inline">Register now</span>
-            <span className="sm:hidden">Register</span>
+            <span className="hidden sm:inline">Register as an Ambassador</span>
+            <span className="sm:hidden">Ambassador</span>
             <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
           </a>
           <button

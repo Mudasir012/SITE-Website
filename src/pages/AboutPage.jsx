@@ -92,7 +92,7 @@ export default function AboutPage({ onNavigate }) {
 
             <Reveal className="mt-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center" delay={0.22}>
               <a href={event.registrationUrl} target="_blank" rel="noopener noreferrer" className={ticketBase}>
-                <span>Register now</span>
+                <span>Register as an Ambassador</span>
                 <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
               </a>
               <button
@@ -331,7 +331,7 @@ export default function AboutPage({ onNavigate }) {
               </div>
               <div className="flex flex-col items-start gap-4 sm:items-end">
                 <a href={event.registrationUrl} target="_blank" rel="noopener noreferrer" className={ticketBase}>
-                  <span>Register now</span>
+                  <span>Register as an Ambassador</span>
                   <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
                 </a>
                 <button

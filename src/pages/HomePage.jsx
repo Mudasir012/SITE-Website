@@ -448,7 +448,7 @@ function ClosingCTA() {
                   </p>
                 </div>
                 <TicketLink href={event.registrationUrl} className="shrink-0">
-                  Register now
+                  Register as an Ambassador
                 </TicketLink>
               </Reveal>
             </div>
@@ -593,7 +593,7 @@ export default function HomePage({ onNavigate }) {
               </div>
             ))}
             <div className="col-span-2 flex items-center justify-start px-1 py-3.5 sm:px-4 sm:py-4 lg:col-span-1 lg:border-b-0 lg:justify-end">
-              <TicketLink href={event.registrationUrl}>Register now</TicketLink>
+              <TicketLink href={event.registrationUrl}>Register as an Ambassador</TicketLink>
             </div>
           </motion.div>
         </motion.div>

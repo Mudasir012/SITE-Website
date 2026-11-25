@@ -347,7 +347,7 @@ export default function FaqPage() {
             rel="noopener noreferrer"
             className="group inline-flex shrink-0 items-center gap-3 bg-arcade-lime px-6 py-4 font-display text-[11px] font-bold uppercase tracking-[0.18em] text-arcade-ink transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-bone focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-ink"
           >
-            Register now
+            Register as an Ambassador
             <ArrowUpRight
               className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
               aria-hidden="true"
