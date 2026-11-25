@@ -68,6 +68,17 @@ export default function Navbar({ activePage, onNavigate }) {
               </li>
             );
           })}
+          <li>
+            <a
+              href="https://canva.link/3r2n9u37x63ar4d"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex items-center gap-1 border-b-2 border-transparent px-3 py-1.5 text-[13px] font-semibold text-white/70 transition-colors duration-200 hover:text-white ${focusRing}`}
+            >
+              Info Booklet
+              <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </a>
+          </li>
         </ul>
 
         {/* Actions */}
@@ -117,6 +128,18 @@ export default function Navbar({ activePage, onNavigate }) {
                 </li>
               );
             })}
+            <li>
+              <a
+                href="https://canva.link/3r2n9u37x63ar4d"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMenuOpen(false)}
+                className={`flex w-full items-center justify-between px-2 py-3 text-left text-sm font-semibold text-white/70 transition-colors hover:text-white ${focusRing}`}
+              >
+                Info Booklet
+                <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+              </a>
+            </li>
           </ul>
         </div>
       )}
