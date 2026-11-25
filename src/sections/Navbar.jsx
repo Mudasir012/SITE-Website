@@ -32,9 +32,9 @@ export default function Navbar({ activePage, onNavigate }) {
           aria-label="CITE 2026 — home"
         >
           <img
-            src="/CITE%20New%20Logo.jpeg"
+            src="/CITE_New_Logo_White.png"
             alt="CITE 2026"
-            className="h-7 w-auto shrink-0 rounded-sm object-contain sm:h-8"
+            className="h-7 w-auto shrink-0 object-contain sm:h-8"
           />
           <span aria-hidden="true" className="h-6 w-0.5 rounded-full bg-white/80 sm:h-7" />
           <img

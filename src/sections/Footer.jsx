@@ -23,9 +23,9 @@ export default function Footer({ onNavigate }) {
             className="group flex shrink-0 items-center text-left"
           >
             <img
-              src="/CITE%20New%20Logo.jpeg"
+              src="/CITE_New_Logo_White.png"
               alt="CITE 2026"
-              className="h-10 w-auto rounded-sm object-contain transition-transform duration-200 group-hover:scale-105"
+              className="h-10 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
             />
           </button>
 

@@ -125,11 +125,11 @@ function HeroPass() {
           >
             <span className="flex h-11 items-center justify-center bg-arcade-ink px-2.5">
               <img
-                src="/CITE%20New%20Logo.jpeg"
+                src="/CITE_New_Logo_White.png"
                 alt=""
                 loading="lazy"
                 decoding="async"
-                className="h-7 w-auto rounded-sm object-contain"
+                className="h-7 w-auto object-contain"
               />
             </span>
             <span className="font-display text-[10px] font-bold uppercase tracking-[0.22em]">Student pass</span>

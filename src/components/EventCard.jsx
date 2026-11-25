@@ -91,11 +91,11 @@ export default function EventCard({
           <span aria-hidden="true" className="absolute inset-0 bg-arcade-ink/25" />
           <span aria-hidden="true" className="absolute right-3 top-3 flex h-7 items-center justify-center border border-white/15 bg-arcade-ink/80 px-1.5">
             <img
-              src="/CITE%20New%20Logo.jpeg"
+              src="/CITE_New_Logo_White.png"
               alt=""
               loading="lazy"
               decoding="async"
-              className="h-4 w-auto rounded-[1px] object-contain"
+              className="h-4 w-auto object-contain"
             />
           </span>
           <span aria-hidden="true" className={`absolute bottom-0 left-0 h-[3px] w-16 ${accent.block}`} />
