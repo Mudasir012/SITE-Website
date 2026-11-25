@@ -37,7 +37,6 @@ export const competitionCategories = [
       { name: 'Mafia Wars', image: photo(7594313) },
       { name: 'English Debate', image: photo(6950207) },
       { name: 'Mind over Matter', image: photo(6599554) },
-      { name: 'Balloon Pop Quiz', image: photo(796606) },
       { name: 'PUBG', image: photo(4526481) },
       { name: 'Tekken 8', image: photo(30512715) },
       { name: 'FC (FIFA)', image: photo(1174746) },

@@ -15,7 +15,7 @@ import { event } from '../data/event.js';
 
 const checklistItems = [
   'Form a team of 2–4 builders (solo registrants get matched on the day)',
-  'Pick an event from our 19-competition lineup',
+  'Pick an event from our 18-competition lineup',
   'Pack your laptop, chargers, and valid student ID card or CNIC',
 ];
 
@@ -100,7 +100,7 @@ export default function AboutPage({ onNavigate }) {
                 onClick={() => onNavigate('tracks', '/tracks')}
                 className="inline-flex items-center gap-2 border-b border-white/40 pb-1 font-display text-xs font-bold uppercase tracking-[0.18em] text-arcade-bone transition-colors hover:border-arcade-violet hover:text-arcade-violet focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-violet focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-ink"
               >
-                Explore all 19 events
+                Explore all 18 events
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </button>
             </Reveal>

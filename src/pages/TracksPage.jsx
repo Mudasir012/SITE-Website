@@ -18,7 +18,7 @@ const laneAccents = {
     text: 'text-arcade-limeHot',
     block: 'bg-arcade-limeHot',
     border: 'border-arcade-limeHot/50',
-    chip: 'bg-arcade-limeHot text-arcade-ink',
+    chip: 'bg-arcade-limeHot text-white',
   },
 };
 

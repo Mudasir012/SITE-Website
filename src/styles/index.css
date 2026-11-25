@@ -45,17 +45,17 @@
     font-family: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    caret-color: #bfff00;
+    caret-color: #fcbf04;
   }
 
   ::selection {
-    background-color: #bfff00;
+    background-color: #fcbf04;
     color: #050505;
   }
 
   :focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px #050505, 0 0 0 3px #bfff00;
+    box-shadow: 0 0 0 2px #050505, 0 0 0 3px #fcbf04;
   }
 
   ::-webkit-scrollbar {
@@ -74,7 +74,7 @@
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #bfff00;
+    background: #fcbf04;
   }
 }
 

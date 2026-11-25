@@ -40,19 +40,19 @@ export default {
           blue: '#0041B3',
           deep: '#002C74',
           darker: '#001B48',
-          yellow: '#FCB601',
-          green: '#028B30',
-          red: '#E80100',
+          yellow: '#FCBF04',
+          green: '#027E35',
+          red: '#E40206',
         },
-        // Home page world: black stage, white type, electric violet + lime accents.
+        // Home page world: black stage, white type, CITE red + gold + green accents.
         arcade: {
           ink: '#050505',
           coal: '#121212',
           bone: '#FFFFFF',
           mute: '#A3A3A3',
-          violet: '#8A2BE2',
-          lime: '#BFFF00',
-          limeHot: '#7BFF00',
+          violet: '#E40206',
+          lime: '#FCBF04',
+          limeHot: '#027E35',
         },
       },
       fontFamily: {

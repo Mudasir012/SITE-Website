@@ -12,13 +12,9 @@ import { Reveal, RevealHeading } from '../components/ScrollReveal.jsx';
 import { event } from '../data/event.js';
 import { events } from '../data/tracks.js';
 import { eventSchedule } from '../data/schedule.js';
+import HERO_SLIDES from 'virtual:slideshow-images';
 
 const pad = (value) => String(value).padStart(2, '0');
-
-const HERO_SLIDES = [
-  '/Slideshow%20Images/slide-1.webp',
-  '/Slideshow%20Images/slide-2.webp',
-];
 
 const featuredEvents = [events[0], events[9], events[4], events[2], events[10], events[14]].filter(Boolean);
 
@@ -145,7 +141,7 @@ function HeroPass() {
             <p className="mt-3 font-display text-4xl font-bold uppercase leading-[0.94] tracking-[-0.05em] text-arcade-bone">
               One day.
               <br />
-              Nineteen
+              Eighteen
               <br />
               chances.
             </p>
@@ -221,7 +217,7 @@ function DayRoute({ onNavigate }) {
           <RevealHeading
             lines={[
               { text: 'One day.' },
-              { text: 'Nineteen ways', accent: true },
+              { text: 'Eighteen ways', accent: true },
               { text: 'to win.' },
             ]}
             className="font-display font-bold uppercase leading-[0.9] tracking-[-0.05em] text-arcade-bone"
@@ -304,7 +300,7 @@ function ArenaSection({ onNavigate }) {
               onClick={() => onNavigate('tracks', '/tracks')}
               className="inline-flex items-center gap-2 self-start border-b border-arcade-lime pb-1 font-display text-xs font-bold uppercase tracking-[0.18em] text-arcade-bone transition-colors hover:text-arcade-lime focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-lime focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-ink lg:self-auto"
             >
-              View all 19 events
+              View all 18 events
               <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
             </button>
           </Reveal>
@@ -557,7 +553,7 @@ export default function HomePage({ onNavigate }) {
                   12.12.26
                 </span>
                 <span className="font-display text-[10px] font-bold uppercase tracking-[0.2em] text-arcade-mute">
-                  Nineteen competitions
+                  Eighteen competitions
                 </span>
               </motion.div>
             </div>
@@ -568,7 +564,7 @@ export default function HomePage({ onNavigate }) {
                 onClick={() => onNavigate('tracks', '/tracks')}
                 className="inline-flex items-center gap-2 border-b border-white/40 pb-1 font-display text-xs font-bold uppercase tracking-[0.18em] text-arcade-bone transition-colors hover:border-arcade-lime hover:text-arcade-lime focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-lime focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-ink"
               >
-                Explore all 19 events
+                Explore all 18 events
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </button>
             </motion.div>
@@ -581,7 +577,7 @@ export default function HomePage({ onNavigate }) {
             {[
               { label: 'Date', value: '12 Dec 2026' },
               { label: 'Campus', value: 'CUI Abbottabad' },
-              { label: 'Events', value: '19 competitions' },
+              { label: 'Events', value: '18 competitions' },
             ].map((fact) => (
               <div key={fact.label} className="border-b border-white/20 px-1 py-3.5 sm:px-4 sm:py-4 lg:border-b-0 lg:border-r">
                 <p className="font-display text-[9px] font-bold uppercase tracking-[0.2em] text-arcade-mute">
