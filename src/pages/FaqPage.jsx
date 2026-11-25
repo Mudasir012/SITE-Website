@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { ArrowUpRight, Mail, Phone, Search } from 'lucide-react';
+import { ArrowUpRight, Mail, Search } from 'lucide-react';
 import { Reveal, RevealHeading } from '../components/ScrollReveal.jsx';
 import { faqs } from '../data/faqs.js';
 import { event } from '../data/event.js';
@@ -221,13 +221,6 @@ export default function FaqPage() {
                   >
                     <Mail className="h-3.5 w-3.5 text-arcade-lime" aria-hidden="true" />
                     {event.contact.email}
-                  </a>
-                  <a
-                    href={`tel:${event.contact.phone.replace(/\s/g, '')}`}
-                    className="inline-flex items-center gap-2 font-display text-[11px] font-bold uppercase tracking-[0.1em] text-arcade-bone transition-colors hover:text-arcade-lime"
-                  >
-                    <Phone className="h-3.5 w-3.5 text-arcade-lime" aria-hidden="true" />
-                    {event.contact.phone}
                   </a>
                 </div>
               </div>
