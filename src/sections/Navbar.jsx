@@ -28,19 +28,19 @@ export default function Navbar({ activePage, onNavigate }) {
         <button
           type="button"
           onClick={() => navigate('home', '/')}
-          className={`group flex shrink-0 items-center gap-3 transition-transform duration-200 hover:scale-[1.02] sm:gap-3.5 ${focusRing}`}
+          className={`group flex shrink-0 items-center gap-3 transition-transform duration-200 hover:scale-[1.02] sm:gap-4 ${focusRing}`}
           aria-label="CITE 2026 — home"
         >
           <img
             src="/CITE_New_Logo_White.png"
             alt="CITE 2026"
-            className="h-7 w-auto shrink-0 object-contain sm:h-8"
+            className="h-9 w-auto shrink-0 object-contain sm:h-10"
           />
-          <span aria-hidden="true" className="h-6 w-0.5 rounded-full bg-white/80 sm:h-7" />
+          <span aria-hidden="true" className="h-7 w-px rounded-full bg-white/75 sm:h-8" />
           <img
             src="/CUI%20Logo.png"
             alt="COMSATS University Islamabad"
-            className="h-8 w-8 shrink-0 rounded-full object-contain sm:h-9 sm:w-9"
+            className="h-9 w-9 shrink-0 rounded-full object-contain sm:h-10 sm:w-10"
           />
         </button>
 
