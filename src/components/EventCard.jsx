@@ -60,7 +60,10 @@ export default function EventCard({
         <span aria-hidden="true" className={`h-9 w-[3px] ${accent.block}`} />
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div
+        onClick={onNavigate}
+        className={`flex min-w-0 flex-1 flex-col ${onNavigate ? 'cursor-pointer' : ''}`}
+      >
         <div className="relative h-[124px] shrink-0 overflow-hidden border-b border-white/10 bg-arcade-ink">
           <motion.div
             initial={reduced ? false : { clipPath: 'inset(0 100% 0 0)' }}
@@ -136,7 +139,10 @@ export default function EventCard({
               {onNavigate ? (
                 <button
                   type="button"
-                  onClick={onNavigate}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onNavigate();
+                  }}
                   aria-label={`${actionLabel} for ${event.name}`}
                   className={actionClass}
                 >

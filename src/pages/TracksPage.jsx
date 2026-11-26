@@ -27,7 +27,7 @@ const laneShortNames = {
   B: 'Fun & esports',
 };
 
-export default function TracksPage() {
+export default function TracksPage({ onNavigate }) {
   const reduced = useReducedMotion();
 
   return (
@@ -131,6 +131,8 @@ export default function TracksPage() {
                       event={events[eventIndex]}
                       index={eventIndex}
                       href={event.registrationUrl}
+                      actionLabel="View details"
+                      onNavigate={() => onNavigate('event', `/tracks/${item.slug}`)}
                     />
                   );
                 })}

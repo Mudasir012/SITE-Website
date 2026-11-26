@@ -311,7 +311,7 @@ function ArenaSection({ onNavigate }) {
             <motion.button
               key={item.name}
               type="button"
-              onClick={() => onNavigate('tracks', '/tracks')}
+              onClick={() => onNavigate('event', `/tracks/${item.slug}`)}
               whileHover={reduced ? undefined : { rotateY: 5, rotateX: -4, y: -8 }}
               transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
               style={{ transformStyle: 'preserve-3d' }}

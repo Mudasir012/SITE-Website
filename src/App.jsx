@@ -8,6 +8,7 @@ import HomePage from './pages/HomePage.jsx';
 const pageLoaders = {
   about: () => import('./pages/AboutPage.jsx'),
   tracks: () => import('./pages/TracksPage.jsx'),
+  event: () => import('./pages/EventDetailPage.jsx'),
   schedule: () => import('./pages/SchedulePage.jsx'),
   faq: () => import('./pages/FaqPage.jsx'),
   admin: () => import('./pages/admin/AdminPortal.jsx'),
@@ -15,6 +16,7 @@ const pageLoaders = {
 
 const AboutPage = lazy(pageLoaders.about);
 const TracksPage = lazy(pageLoaders.tracks);
+const EventDetailPage = lazy(pageLoaders.event);
 const SchedulePage = lazy(pageLoaders.schedule);
 const FaqPage = lazy(pageLoaders.faq);
 const AdminPortal = lazy(pageLoaders.admin);
@@ -26,8 +28,8 @@ export function prefetchPage(pageId) {
 
 const ROUTES = ['about', 'tracks', 'schedule', 'faq', 'admin'];
 
-// Map a clean URL path to a page id, with support for a deployed base path.
-function getPageFromPath() {
+// Map a clean URL path to a page id (and optional event slug), with support for a deployed base path.
+function getRouteFromPath() {
   const basePath = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '');
   let path = window.location.pathname;
 
@@ -35,18 +37,25 @@ function getPageFromPath() {
     path = path.slice(basePath.length);
   }
 
-  const clean = path.replace(/^\/+/, '').split('/')[0].replace(/\.html$/, '');
-  return ROUTES.includes(clean) ? clean : 'home';
+  const segments = path.replace(/^\/+/, '').split('/').filter(Boolean);
+  const first = (segments[0] || '').replace(/\.html$/, '');
+
+  if (first === 'tracks' && segments[1]) {
+    return { page: 'event', eventSlug: decodeURIComponent(segments[1]) };
+  }
+
+  return { page: ROUTES.includes(first) ? first : 'home', eventSlug: '' };
 }
 
 export default function App() {
-  const [activePage, setActivePage] = useState(() => getPageFromPath());
+  const [route, setRoute] = useState(() => getRouteFromPath());
+  const activePage = route.page;
 
   // Follow browser back/forward navigation.
   useEffect(() => {
     const handlePopState = () => {
-      setActivePage(getPageFromPath());
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setRoute(getRouteFromPath());
+      window.scrollTo({ top: 0, behavior: 'auto' });
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -55,7 +64,7 @@ export default function App() {
 
   // Prefetch public route chunks once the browser is idle so navigation feels instant.
   useEffect(() => {
-    const publicRoutes = ['about', 'tracks', 'schedule', 'faq'];
+    const publicRoutes = ['about', 'tracks', 'event', 'schedule', 'faq'];
     const prefetchAll = () => publicRoutes.forEach(prefetchPage);
     if ('requestIdleCallback' in window) {
       const id = window.requestIdleCallback(prefetchAll, { timeout: 2000 });
@@ -65,15 +74,24 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleNavigate = (pageId) => {
+  const handleNavigate = (pageId, customPath) => {
     const basePath = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
-    const nextPath = pageId === 'home' ? `${basePath}/` : `${basePath}/${pageId}`;
+    const target = customPath
+      ? `${basePath}${customPath.startsWith('/') ? customPath : `/${customPath}`}`
+      : pageId === 'home'
+        ? `${basePath}/`
+        : `${basePath}/${pageId}`;
 
-    if (window.location.pathname !== nextPath) {
-      window.history.pushState({ page: pageId }, '', nextPath);
+    if (window.location.pathname !== target) {
+      window.history.pushState({ page: pageId }, '', target);
     }
 
-    setActivePage(pageId);
+    if (pageId === 'event' && customPath) {
+      const slug = customPath.split('/').filter(Boolean)[1] || '';
+      setRoute({ page: 'event', eventSlug: slug });
+    } else {
+      setRoute({ page: pageId, eventSlug: '' });
+    }
     window.scrollTo({ top: 0, behavior: 'auto' });
   };
 
@@ -85,6 +103,8 @@ export default function App() {
         return <AboutPage onNavigate={handleNavigate} />;
       case 'tracks':
         return <TracksPage onNavigate={handleNavigate} />;
+      case 'event':
+        return <EventDetailPage slug={route.eventSlug} onNavigate={handleNavigate} />;
       case 'schedule':
         return <SchedulePage onNavigate={handleNavigate} />;
       case 'faq':
@@ -100,10 +120,10 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
       <div className="min-h-screen bg-arcade-ink text-arcade-bone flex flex-col justify-between selection:bg-arcade-lime selection:text-arcade-ink">
-        {!isAdmin && <Navbar activePage={activePage} onNavigate={handleNavigate} />}
+        {!isAdmin && <Navbar activePage={activePage === 'event' ? 'tracks' : activePage} onNavigate={handleNavigate} />}
         <main className="flex-1">
           <AnimatePresence mode="wait" initial={false}>
-            <PageTransition key={activePage}>
+            <PageTransition key={activePage === 'event' ? `event-${route.eventSlug}` : activePage}>
               <Suspense fallback={<div className="min-h-[100vh] flex items-center justify-center font-mono text-xs text-ivory/50" aria-busy="true">Loading CITE...</div>}>
                 {renderPage()}
               </Suspense>
