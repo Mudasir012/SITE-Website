@@ -175,6 +175,60 @@ test('maps throttling and ambiguous transport failures without blind retries', a
   assert.equal(calls, 1);
 });
 
+test('retries a transient Exchange 400 and then succeeds', async () => {
+  let calls = 0;
+  const service = createMailService({
+    config,
+    tokens: createTokens('access-token'),
+    fetchImpl: async () => {
+      calls += 1;
+      return calls === 1
+        ? jsonResponse(400, {
+            error: { code: 'ErrorMailboxStoreUnavailable', message: 'Mailbox unavailable' },
+          })
+        : jsonResponse(202, {}, { 'request-id': 'graph-request-3' });
+    },
+  });
+
+  const result = await service.sendEmail({
+    to: 'user@example.com',
+    subject: 'Retry 400',
+    text: 'Body',
+  });
+
+  assert.equal(result.status, 202);
+  assert.equal(calls, 2);
+});
+
+test('does not retry a permanent 400 and keeps the Graph error code', async () => {
+  let calls = 0;
+  const service = createMailService({
+    config,
+    tokens: createTokens('access-token'),
+    fetchImpl: async () => {
+      calls += 1;
+      return jsonResponse(400, {
+        error: { code: 'ErrorInvalidRecipients', message: 'Invalid recipient' },
+      });
+    },
+  });
+
+  await assert.rejects(
+    service.sendEmail({ to: 'user@example.com', subject: 'Hi', text: 'Body' }),
+    (error) => {
+      assert.equal(error.code, 'bad_request');
+      assert.equal(error.status, 400);
+      assert.equal(error.upstreamCode, 'ErrorInvalidRecipients');
+      assert.equal(error.upstreamMessage, 'Invalid recipient');
+      assert.equal(error.outcome, 'rejected');
+      return true;
+    }
+  );
+
+  // A permanent 400 must fail fast, not burn retries.
+  assert.equal(calls, 1);
+});
+
 test('rejects malformed recipients and empty content before contacting Graph', async () => {
   let called = false;
   const service = createMailService({

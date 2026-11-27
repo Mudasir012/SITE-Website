@@ -22,7 +22,9 @@ function safeGraphError(error) {
     case 'forbidden':
       return 'Microsoft 365 denied Mail.Send for the authorized mailbox (403).';
     case 'bad_request':
-      return 'Microsoft 365 rejected the email request (400). Check the message configuration.';
+      return error?.upstreamCode
+        ? `Microsoft 365 rejected the email request (400 ${error.upstreamCode}).`
+        : 'Microsoft 365 rejected the email request (400). Check the message configuration.';
     default:
       return `Microsoft 365 email submission failed${error?.status ? ` (${error.status})` : ''}.`;
   }
@@ -54,7 +56,12 @@ export const graphProvider = {
         code: error?.code,
         status: error?.status,
         operationId: error?.operationId,
+        requestId: error?.requestId,
         outcome: error?.outcome,
+        // Microsoft's own code/message, e.g. ErrorInvalidRecipients or
+        // ErrorTooManyRecipients, is what makes a 400 actionable.
+        graphCode: error?.upstreamCode,
+        graphMessage: error?.upstreamMessage,
       });
 
       throw new Error(safeGraphError(error));

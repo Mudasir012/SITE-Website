@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { logger } from '../../logger.js';
 import { isValidEmail, normalizeEmail } from '../../lib/validation.js';
 import { graphConfig } from './config.js';
 import { tokenService } from './tokenService.js';
@@ -32,6 +33,26 @@ function getRequestId(headers) {
     headers?.get?.('x-ms-request-id') ||
     null
   );
+}
+
+// Graph returns 400 for these while Exchange is briefly busy or moving the
+// mailbox. The message was NOT accepted, so retrying cannot duplicate mail.
+const TRANSIENT_BAD_REQUEST_CODES = new Set([
+  'ErrorMailboxStoreUnavailable',
+  'ErrorMailboxMoveInProgress',
+  'ErrorServerBusy',
+  'ErrorTimeoutExpired',
+  'ErrorTransient',
+  'ErrorInternalServerError',
+]);
+
+const MAX_ATTEMPTS = 3;
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    const timer = setTimeout(resolve, ms);
+    if (typeof timer?.unref === 'function') timer.unref();
+  });
 }
 
 /**
@@ -74,7 +95,8 @@ export function createMailService({
 
     const operationId = randomUUID();
 
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
+      const isLastAttempt = attempt === MAX_ATTEMPTS - 1;
       const token = await tokens.getAccessToken();
       let response;
 
@@ -128,6 +150,24 @@ export function createMailService({
 
       const data = await response.json().catch(() => ({}));
       const upstreamCode = data?.error?.code;
+      const upstreamMessage = data?.error?.message;
+
+      // Exchange was momentarily unavailable. Nothing was accepted, so a short
+      // backoff retry is safe and can turn a transient 400 into a delivered
+      // email instead of a permanent failure.
+      if (
+        response.status === 400 &&
+        !isLastAttempt &&
+        TRANSIENT_BAD_REQUEST_CODES.has(upstreamCode)
+      ) {
+        logger.warn('Microsoft Graph returned a transient 400; retrying', {
+          graphCode: upstreamCode,
+          attempt: attempt + 1,
+        });
+        await sleep(400 * (attempt + 1));
+        continue;
+      }
+
       const code =
         response.status === 403
           ? 'forbidden'
@@ -140,6 +180,12 @@ export function createMailService({
         operationId,
         requestId,
         outcome: response.status >= 500 ? 'unknown' : 'rejected',
+        // Keep Microsoft's own code so a 400/403 can be diagnosed instead of
+        // collapsing into a generic "request rejected" message.
+        upstreamCode:
+          typeof upstreamCode === 'string' ? upstreamCode.slice(0, 120) : null,
+        upstreamMessage:
+          typeof upstreamMessage === 'string' ? upstreamMessage.slice(0, 500) : null,
       });
     }
 
