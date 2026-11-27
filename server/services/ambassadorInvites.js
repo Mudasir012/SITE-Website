@@ -9,7 +9,7 @@ import { generateAmbassadorInviteLink } from './magicLinks.js';
 import { requireSupabaseAdmin } from './supabaseAdmin.js';
 
 const AMBASSADOR_FIELDS =
-  'id, full_name, email, phone, cnic, university, referral_code, status, user_id, portal_invited_at, signup_completed_at, deleted_at';
+  'id, full_name, email, phone, cnic, university, referral_code, status, user_id, portal_invited_at, signup_completed_at, invited_by, reviewed_at, reviewed_by, deleted_at';
 
 function newReferralCode() {
   return `CITE-${randomBytes(5).toString('hex').toUpperCase()}`;
@@ -35,6 +35,24 @@ async function findAmbassadorByEmail(email) {
     .select(AMBASSADOR_FIELDS)
     .ilike('email', email)
     .is('deleted_at', null)
+    .maybeSingle();
+
+  if (error) throw new Error('Could not look up the ambassador record.');
+  return data || null;
+}
+
+/**
+ * ambassadors.email has a hard UNIQUE constraint, and deletes are soft. A
+ * soft-deleted row therefore still owns the email, so a re-invite must revive
+ * that row instead of inserting a duplicate that can never satisfy the index.
+ */
+async function findDeletedAmbassadorByEmail(email) {
+  const admin = requireSupabaseAdmin();
+  const { data, error } = await admin
+    .from('ambassadors')
+    .select(AMBASSADOR_FIELDS)
+    .ilike('email', email)
+    .not('deleted_at', 'is', null)
     .maybeSingle();
 
   if (error) throw new Error('Could not look up the ambassador record.');
@@ -91,15 +109,16 @@ async function deleteAuthUser(userId, { required = true } = {}) {
 /**
  * Invite links create a Supabase Auth user immediately, even if the ambassador
  * never opens the email. Remove that user before creating a fresh invite so a
- * deleted or resent invitation does not leave an orphaned account behind.
+ * deleted or re-invited ambassador does not leave an orphaned account behind.
  */
-async function removeExistingInviteAuthUser({ email, existing }) {
+async function removeExistingInviteAuthUser({ email, existing, deleted }) {
   if (await findAdminProfileByEmail(email)) {
     throw new Error('That email belongs to an admin account. Use a different ambassador email.');
   }
 
   const userIds = new Set();
   if (existing?.user_id) userIds.add(existing.user_id);
+  if (deleted?.user_id) userIds.add(deleted.user_id);
 
   const authUser = await findAuthUserByEmail(email);
   if (authUser) userIds.add(authUser.id);
@@ -130,7 +149,11 @@ async function insertInvitedAmbassador(email, adminEmail, userId) {
       .single();
 
     if (!error) return data;
+
+    // Only referral-code collisions can be fixed by retrying. An email or
+    // user_id collision never improves with another attempt.
     if (error.code !== '23505' || attempt === 4) throw error;
+    if (!/referral_code/i.test(error.message)) throw error;
   }
 
   throw new Error('Could not allocate a unique referral code.');
@@ -155,26 +178,68 @@ async function markInvited(ambassadorId, adminEmail, userId) {
   if (error) throw error;
 }
 
-async function rollbackInvite({ ambassador, wasExisting, previous, userId }) {
+/**
+ * Re-invites after a delete: the soft-deleted row still owns the UNIQUE email,
+ * so un-delete it and reset its signup fields for a fresh invitation. The
+ * referral code is kept so historical referrals stay attributed to this row.
+ */
+async function reviveInvitedAmbassador(ambassadorId, adminEmail, userId) {
+  const admin = requireSupabaseAdmin();
+  const { error } = await admin
+    .from('ambassadors')
+    .update({
+      deleted_at: null,
+      status: 'invited',
+      user_id: userId,
+      invited_by: adminEmail,
+      portal_invited_at: new Date().toISOString(),
+      signup_completed_at: null,
+      reviewed_at: null,
+      reviewed_by: null,
+      full_name: '',
+      phone: '',
+      university: '',
+      cnic: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', ambassadorId);
+
+  if (error) throw error;
+}
+
+async function rollbackInvite({ ambassador, mode, previous, userId }) {
   const admin = requireSupabaseAdmin();
 
   await deleteAuthUser(userId, { required: false });
 
   try {
-    if (wasExisting) {
-      await admin
-        .from('ambassadors')
-        .update({
-          status: previous.status,
-          portal_invited_at: previous.portal_invited_at,
-          user_id: null,
-          invited_by: null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', ambassador.id);
-    } else {
+    if (mode === 'created') {
       await admin.from('ambassadors').delete().eq('id', ambassador.id);
+      return;
     }
+
+    // Both "existing" and "revived" restore the row that existed before the
+    // invite. user_id must be cleared: the old auth user was deleted above.
+    const restore = {
+      status: previous.status,
+      user_id: null,
+      invited_by: previous.invited_by,
+      portal_invited_at: previous.portal_invited_at,
+      signup_completed_at: previous.signup_completed_at,
+      reviewed_at: previous.reviewed_at,
+      reviewed_by: previous.reviewed_by,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (mode === 'revived') {
+      restore.deleted_at = previous.deleted_at;
+      restore.full_name = previous.full_name;
+      restore.phone = previous.phone;
+      restore.university = previous.university;
+      restore.cnic = previous.cnic;
+    }
+
+    await admin.from('ambassadors').update(restore).eq('id', ambassador.id);
   } catch (error) {
     logger.warn('Could not roll back ambassador invite record', {
       ambassadorId: ambassador.id,
@@ -191,22 +256,27 @@ export async function inviteAmbassadorByEmail({ email, adminEmail = null }) {
     throw new Error('An account has already been created for this email. Manage it from the ambassador list.');
   }
 
-  await removeExistingInviteAuthUser({ email: recipient, existing });
+  // A previously deleted ambassador still owns the UNIQUE email constraint.
+  // Revive that row instead of inserting a duplicate that can never commit.
+  const deleted = existing ? null : await findDeletedAmbassadorByEmail(recipient);
+
+  await removeExistingInviteAuthUser({ email: recipient, existing, deleted });
 
   // Generate the auth invite first so a failed link never leaves a stale
   // invitation row in the admin list.
   const { actionLink, userId } = await generateAmbassadorInviteLink(recipient);
 
   let ambassador;
-  const wasExisting = Boolean(existing);
-  const previous = existing
-    ? { status: existing.status, portal_invited_at: existing.portal_invited_at }
-    : null;
+  const mode = existing ? 'existing' : deleted ? 'revived' : 'created';
+  const previous = existing || deleted || null;
 
   try {
-    if (wasExisting) {
+    if (mode === 'existing') {
       await markInvited(existing.id, adminEmail, userId);
       ambassador = await findAmbassadorById(existing.id);
+    } else if (mode === 'revived') {
+      await reviveInvitedAmbassador(deleted.id, adminEmail, userId);
+      ambassador = await findAmbassadorById(deleted.id);
     } else {
       ambassador = await insertInvitedAmbassador(recipient, adminEmail, userId);
     }
@@ -241,7 +311,7 @@ export async function inviteAmbassadorByEmail({ email, adminEmail = null }) {
       action: 'INVITE_AMBASSADOR',
       entityType: 'ambassador',
       entityId: ambassador.id,
-      details: { email: recipient, provider: delivery.provider },
+      details: { email: recipient, provider: delivery.provider, mode },
     });
 
     return {
@@ -255,7 +325,7 @@ export async function inviteAmbassadorByEmail({ email, adminEmail = null }) {
   } catch (error) {
     await rollbackInvite({
       ambassador,
-      wasExisting,
+      mode,
       previous,
       userId,
     });
@@ -265,7 +335,7 @@ export async function inviteAmbassadorByEmail({ email, adminEmail = null }) {
       action: 'INVITE_AMBASSADOR_FAILED',
       entityType: 'ambassador',
       entityId: ambassador.id,
-      details: { email: recipient, error: error?.message },
+      details: { email: recipient, error: error?.message, mode },
     });
 
     throw error;
