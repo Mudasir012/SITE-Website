@@ -120,9 +120,19 @@ export function createTokenService({
       try {
         await store.writeRefreshToken(data.refresh_token);
       } catch (error) {
-        throw new GraphAuthError('token_store_error', response.status, false, {
-          reason: error?.message || 'Could not persist replacement refresh token',
-        });
+        // A concurrent invocation rotated the stored token first. Our access
+        // token is still valid, so adopt the persisted state rather than
+        // failing the send. Only real store failures are fatal.
+        if (error?.code !== 'refresh_token_conflict') {
+          throw new GraphAuthError('token_store_error', response.status, false, {
+            reason: error?.message || 'Could not persist replacement refresh token',
+          });
+        }
+
+        logger.warn(
+          'Concurrent Microsoft Graph token rotation detected; using acquired access token',
+          { conflict: true }
+        );
       }
     }
 

@@ -25,7 +25,17 @@ function safeGraphError(error) {
       return error?.upstreamCode
         ? `Microsoft 365 rejected the email request (400 ${error.upstreamCode}).`
         : 'Microsoft 365 rejected the email request (400). Check the message configuration.';
+    case 'invalid_token_response':
+      return 'Microsoft 365 returned an unusable authentication response. Re-authenticate the mailbox.';
     default:
+      // Never report a non-mail failure as an email submission failure. Token
+      // endpoint codes such as invalid_request or unauthorized_client land
+      // here, and mislabelling them sends operators hunting the wrong problem.
+      if (error?.status === 400 || error?.status === 401) {
+        return `Microsoft 365 authentication failed${
+          error?.code ? ` (${error.code})` : ''
+        }. Re-authenticate the mailbox.`;
+      }
       return `Microsoft 365 email submission failed${error?.status ? ` (${error.status})` : ''}.`;
   }
 }

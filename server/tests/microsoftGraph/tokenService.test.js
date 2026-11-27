@@ -111,6 +111,30 @@ test('a failed replacement-token write blocks publication of the access token', 
   });
 });
 
+test('a concurrent rotation does not fail the send', async () => {
+  const store = createStore();
+  store.writeRefreshToken = async () => {
+    const conflict = new Error('Microsoft Graph refresh token changed during token exchange.');
+    conflict.code = 'refresh_token_conflict';
+    throw conflict;
+  };
+
+  const service = createTokenService({
+    config,
+    store,
+    fetchImpl: async () =>
+      jsonResponse(200, {
+        access_token: 'access-token-after-race',
+        expires_in: 3600,
+        refresh_token: 'rotated-refresh-token',
+      }),
+  });
+
+  // Another lambda rotated the token first. Our access token is still valid,
+  // so the send must proceed rather than surfacing a phantom email failure.
+  assert.equal(await service.getAccessToken(), 'access-token-after-race');
+});
+
 test('invalid_grant stops further refresh attempts', async () => {
   let calls = 0;
   const service = createTokenService({

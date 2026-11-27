@@ -159,9 +159,16 @@ export function createTokenStore({
           expectedFingerprint = nextFingerprint;
           return;
         }
-        throw new Error(
+
+        // Another process rotated the token between our read and this write.
+        // Surface a typed conflict so the caller can adopt the persisted token
+        // instead of failing the send. Treating this as a hard failure leaves
+        // the row holding a token Microsoft may already have invalidated.
+        const conflict = new Error(
           'Microsoft Graph refresh token changed during token exchange. Retry the token exchange.'
         );
+        conflict.code = 'refresh_token_conflict';
+        throw conflict;
       }
 
       expectedFingerprint = nextFingerprint;

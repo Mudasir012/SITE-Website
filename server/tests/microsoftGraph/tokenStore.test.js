@@ -131,7 +131,13 @@ test('blocks a stale rotation when another process already replaced the token', 
 
   await assert.rejects(
     first.writeRefreshToken('rotated-by-first'),
-    /changed during token exchange/i
+    (error) => {
+      // A typed conflict lets callers adopt the persisted token instead of
+      // treating a concurrent rotation as a fatal store failure.
+      assert.equal(error.code, 'refresh_token_conflict');
+      assert.match(error.message, /changed during token exchange/i);
+      return true;
+    }
   );
   assert.equal(await createStore(client).readRefreshToken(), 'rotated-by-second');
 });
