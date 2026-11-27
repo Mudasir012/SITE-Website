@@ -31,6 +31,25 @@ function resolveAppUrl() {
 const appUrl = resolveAppUrl();
 const emailProvider = (process.env.EMAIL_PROVIDER || 'mock').toLowerCase();
 
+/**
+ * Deployment platforms such as Vercel store environment values literally and do
+ * not strip surrounding quotes the way dotenv does. A scope pasted as
+ * "https://graph.microsoft.com/Mail.Send offline_access" therefore arrives with
+ * quote characters and Microsoft rejects it with AADSTS70011 invalid_scope.
+ * Strip wrapping quotes so both forms work.
+ */
+export function normalizeGraphScope(value) {
+  let scope = String(value || '').trim();
+  if (
+    scope.length >= 2 &&
+    ((scope.startsWith('"') && scope.endsWith('"')) ||
+      (scope.startsWith("'") && scope.endsWith("'")))
+  ) {
+    scope = scope.slice(1, -1).trim();
+  }
+  return scope;
+}
+
 export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   isProduction: (process.env.NODE_ENV || 'development') === 'production',
@@ -45,7 +64,7 @@ export const config = {
   msGraphTenantId: (process.env.MS_GRAPH_TENANT_ID || '').trim(),
   msGraphClientId: (process.env.MS_GRAPH_CLIENT_ID || '').trim(),
   msGraphSenderEmail: (process.env.MS_GRAPH_SENDER_EMAIL || 'cite@cuiatd.edu.pk').trim(),
-  msGraphScope: (process.env.MS_GRAPH_SCOPE || DEFAULT_GRAPH_SCOPE).trim(),
+  msGraphScope: normalizeGraphScope(process.env.MS_GRAPH_SCOPE || DEFAULT_GRAPH_SCOPE),
   msGraphTokenEncryptionKey: (process.env.MS_GRAPH_TOKEN_ENCRYPTION_KEY || '').trim(),
 
   emailProvider: ['mock', 'graph'].includes(emailProvider) ? emailProvider : 'mock',

@@ -79,7 +79,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 MS_GRAPH_TENANT_ID=75df096c-8b72-48e4-9b91-cbf79d87ee3a
 MS_GRAPH_CLIENT_ID=90c11236-10cf-4d46-a53d-7b3900c61369
 MS_GRAPH_SENDER_EMAIL=cite@cuiatd.edu.pk
-MS_GRAPH_SCOPE="https://graph.microsoft.com/Mail.Send offline_access"
+MS_GRAPH_SCOPE=https://graph.microsoft.com/Mail.Send offline_access
 
 # Generate locally: node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"
 MS_GRAPH_TOKEN_ENCRYPTION_KEY=<base64-encoded-32-byte-key>
@@ -89,6 +89,12 @@ EMAIL_PROVIDER=graph
 
 `SUPABASE_SERVICE_ROLE_KEY` is required because the token row is not readable by
 frontend users. It must stay server-side.
+
+Do **not** wrap `MS_GRAPH_SCOPE` in quotes. Vercel stores environment values
+literally and does not strip surrounding quotes the way a local `.env` file does.
+A quoted value reaches Microsoft with `"` characters and is rejected with
+`AADSTS70011: invalid_scope`. The backend strips wrapping quotes defensively, but
+enter it unquoted.
 
 `MS_GRAPH_REFRESH_TOKEN` is bootstrap-only. If the Supabase row does not exist,
 the backend reads this value once, encrypts it, and inserts the row. To provision

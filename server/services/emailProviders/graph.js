@@ -27,6 +27,11 @@ function safeGraphError(error) {
         : 'Microsoft 365 rejected the email request (400). Check the message configuration.';
     case 'invalid_token_response':
       return 'Microsoft 365 returned an unusable authentication response. Re-authenticate the mailbox.';
+    case 'invalid_scope':
+      return 'Microsoft 365 rejected the requested scope (invalid_scope). Check MS_GRAPH_SCOPE for stray quotes or extra values.';
+    case 'unauthorized_client':
+    case 'invalid_client':
+      return 'Microsoft 365 rejected the client configuration. Check MS_GRAPH_CLIENT_ID and MS_GRAPH_TENANT_ID.';
     default:
       // Never report a non-mail failure as an email submission failure. Token
       // endpoint codes such as invalid_request or unauthorized_client land
