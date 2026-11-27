@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowUpRight, Calendar, Clock, Mail, MapPin, ShieldCheck, Trophy, Users } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { event as siteEvent } from '../data/event.js';
-import { getEventBySlug } from '../data/tracks.js';
+import { useTracks } from '../lib/tracks.js';
 import { publicService } from '../lib/supabase';
 import RegistrationModal from '../components/RegistrationModal.jsx';
 
@@ -10,8 +10,8 @@ export default function EventDetailPage({ slug, onNavigate }) {
   const reduced = useReducedMotion();
   const [registerOpen, setRegisterOpen] = useState(false);
   const [registrationOpen, setRegistrationOpen] = useState(false);
-  const item = getEventBySlug(slug);
-
+  const { getBySlug, loading: tracksLoading } = useTracks();
+  const item = getBySlug(slug);
   // The admin controls the registration window from the portal. Keep the
   // public button closed unless the setting explicitly says otherwise.
   useEffect(() => {
@@ -29,11 +29,29 @@ export default function EventDetailPage({ slug, onNavigate }) {
     };
   }, []);
 
+  // A single track can be paused from the admin portal independently of the
+  // global registration switch.
+  const trackOpen = registrationOpen && (item?.registrationOpen !== false);
+  const canRegister = trackOpen;
+
   const openRegistration = () => {
-    if (registrationOpen) setRegisterOpen(true);
+    if (canRegister) setRegisterOpen(true);
   };
 
   if (!item) {
+    if (tracksLoading) {
+      return (
+        <div className="grid min-h-[70vh] place-items-center bg-arcade-ink">
+          <div className="flex flex-col items-center gap-3 font-display">
+            <div className="h-7 w-7 animate-spin rounded-full border-2 border-arcade-lime border-t-transparent" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-arcade-mute">
+              Loading event…
+            </span>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-[70vh] bg-arcade-ink py-24 font-display text-arcade-bone">
         <div className="wrap text-center">
@@ -59,6 +77,13 @@ export default function EventDetailPage({ slug, onNavigate }) {
   const accentBg = isTrackA ? 'bg-arcade-violet text-white' : 'bg-arcade-limeHot text-white';
   const accentBorder = isTrackA ? 'border-arcade-violet/40' : 'border-arcade-limeHot/40';
 
+  const formatTrackDate = (value) => {
+    if (!value) return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
   const infoTiles = [
     { label: 'Fee', value: item.fee, icon: ShieldCheck },
     { label: 'Team Size', value: item.teamSize, icon: Users },
@@ -66,6 +91,15 @@ export default function EventDetailPage({ slug, onNavigate }) {
     { label: 'Runner-up Prize', value: item.runnerUpPrize, icon: Trophy },
     { label: 'Venue', value: item.venue, icon: MapPin },
     { label: 'Timings', value: item.timings, icon: Clock },
+    ...(formatTrackDate(item.startDate)
+      ? [{ label: 'Event Date', value: formatTrackDate(item.startDate), icon: Calendar }]
+      : []),
+    ...(item.capacity
+      ? [{ label: 'Capacity', value: `${item.capacity} participants`, icon: Users }]
+      : []),
+    ...(formatTrackDate(item.registrationDeadline)
+      ? [{ label: 'Registration Closes', value: formatTrackDate(item.registrationDeadline), icon: Calendar }]
+      : []),
   ];
 
   return (
@@ -145,14 +179,14 @@ export default function EventDetailPage({ slug, onNavigate }) {
               <button
                 type="button"
                 onClick={openRegistration}
-                disabled={!registrationOpen}
+                disabled={!canRegister}
                 className={
-                  registrationOpen
+                  canRegister
                     ? 'group inline-flex items-center justify-center gap-3 bg-arcade-lime px-6 py-4 text-[11px] font-bold uppercase tracking-[0.18em] text-arcade-ink transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-bone focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-ink'
                     : 'inline-flex cursor-not-allowed items-center justify-center border border-white/20 bg-arcade-coal px-6 py-4 text-[11px] font-bold uppercase tracking-[0.18em] text-arcade-mute'
                 }
               >
-                {registrationOpen ? (
+                {canRegister ? (
                   <>
                     Register Now
                     <ArrowUpRight
@@ -284,14 +318,14 @@ export default function EventDetailPage({ slug, onNavigate }) {
                 <button
                   type="button"
                   onClick={openRegistration}
-                  disabled={!registrationOpen}
+                  disabled={!canRegister}
                   className={
-                    registrationOpen
+                    canRegister
                       ? 'group mt-5 inline-flex w-full items-center justify-center gap-2 bg-arcade-lime px-5 py-3.5 text-[11px] font-bold uppercase tracking-[0.18em] text-arcade-ink transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-bone focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-coal'
                       : 'mt-5 inline-flex w-full cursor-not-allowed items-center justify-center border border-white/20 bg-arcade-coal px-5 py-3.5 text-[11px] font-bold uppercase tracking-[0.18em] text-arcade-mute'
                   }
                 >
-                  {registrationOpen ? (
+                  {canRegister ? (
                     <>
                       Register Now
                       <ArrowUpRight
@@ -322,7 +356,6 @@ export default function EventDetailPage({ slug, onNavigate }) {
         open={registerOpen}
         event={item}
         onClose={() => setRegisterOpen(false)}
-      />
-    </div>
+      />    </div>
   );
 }

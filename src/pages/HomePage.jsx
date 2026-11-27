@@ -10,13 +10,14 @@ import {
 import { ArrowRight, ArrowUpRight, MapPin, Ticket } from 'lucide-react';
 import { Reveal, RevealHeading } from '../components/ScrollReveal.jsx';
 import { event } from '../data/event.js';
-import { events } from '../data/tracks.js';
+import { events as staticEvents } from '../data/tracks.js';
+import { useTracks } from '../lib/tracks.js';
 import { eventSchedule } from '../data/schedule.js';
 import HERO_SLIDES from 'virtual:slideshow-images';
 
 const pad = (value) => String(value).padStart(2, '0');
 
-const featuredEvents = [events[0], events[9], events[4], events[2], events[10], events[14]].filter(Boolean);
+const FEATURED_SLUGS = ['ai-ml', 'gta-6', 'ui-ux-design', 'web-development', 'mafia-wars', 'tekken-8'];
 
 const dayMoments = [
   eventSchedule.sessions.find((session) => session.title.startsWith('Registration')),
@@ -284,6 +285,11 @@ const arenaTileClasses = [
 
 function ArenaSection({ onNavigate }) {
   const reduced = useReducedMotion();
+  const { tracks } = useTracks();
+  const events = tracks.length ? tracks : staticEvents;
+  const featuredEvents = FEATURED_SLUGS.map((slug) => events.find((item) => item.slug === slug)).filter(
+    Boolean
+  );
 
   return (
     <section className="overflow-hidden bg-arcade-ink py-24 sm:py-32">

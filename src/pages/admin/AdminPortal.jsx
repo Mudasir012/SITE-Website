@@ -6,6 +6,7 @@ import {
   Calendar,
   Mail,
   Award,
+  Layers,
   ShieldCheck,
   ShieldAlert,
   LogOut,
@@ -20,6 +21,7 @@ import AdminTeams from './AdminTeams';
 import AdminEvents from './AdminEvents';
 import AdminCommunication from './AdminCommunication';
 import AdminAmbassadors from './AdminAmbassadors';
+import AdminTracks from './AdminTracks';
 import AdminUsers from './AdminUsers';
 import AdminAuditLogs from './AdminAuditLogs';
 import { adminService, supabase } from '../../lib/supabase';
@@ -112,6 +114,7 @@ export default function AdminPortal({ onBackToSite }) {
     { id: 'registrations', label: 'Registrations', icon: Users },
     { id: 'teams', label: 'Teams Management', icon: Shield },
     { id: 'events', label: 'Events & Limits', icon: Calendar },
+    { id: 'tracks', label: 'Event Page Tracks', icon: Layers },
     { id: 'communication', label: 'Communication Hub', icon: Mail },
     { id: 'ambassadors', label: 'Campus Ambassadors', icon: Award },
     ...(isSuperAdmin ? [{ id: 'users', label: 'Admin Accounts', icon: ShieldCheck }] : []),
@@ -241,6 +244,7 @@ export default function AdminPortal({ onBackToSite }) {
             )}
             {currentTab === 'teams' && <AdminTeams />}
             {currentTab === 'events' && <AdminEvents />}
+            {currentTab === 'tracks' && <AdminTracks />}
             {currentTab === 'communication' && <AdminCommunication />}
             {currentTab === 'ambassadors' && <AdminAmbassadors />}
             {currentTab === 'users' && isSuperAdmin && (

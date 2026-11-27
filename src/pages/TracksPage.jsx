@@ -2,7 +2,8 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight, Code2, Gamepad2 } from 'lucide-react';
 import EventCard from '../components/EventCard.jsx';
 import { Reveal } from '../components/ScrollReveal.jsx';
-import { competitionCategories, events } from '../data/tracks.js';
+import { useTracks } from '../lib/tracks.js';
+import { competitionCategories } from '../data/tracks.js';
 import { event } from '../data/event.js';
 
 const categoryIcons = { A: Code2, B: Gamepad2 };
@@ -29,6 +30,8 @@ const laneShortNames = {
 
 export default function TracksPage({ onNavigate }) {
   const reduced = useReducedMotion();
+  const { tracks } = useTracks();
+  const events = tracks;
 
   return (
     <div className="min-h-screen bg-arcade-ink pb-24 pt-14 font-display text-arcade-bone sm:pt-16 md:pt-20">
@@ -124,12 +127,12 @@ export default function TracksPage({ onNavigate }) {
 
               <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {categoryEvents.map((item) => {
-                  const eventIndex = events.findIndex(({ name }) => name === item.name);
+                  const live = events.find((entry) => entry.slug === item.slug) || item;
                   return (
                     <EventCard
-                      key={item.name}
-                      event={events[eventIndex]}
-                      index={eventIndex}
+                      key={item.slug}
+                      event={live}
+                      index={events.findIndex((entry) => entry.slug === item.slug)}
                       href={event.registrationUrl}
                       actionLabel="View details"
                       onNavigate={() => onNavigate('event', `/tracks/${item.slug}`)}

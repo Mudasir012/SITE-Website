@@ -81,6 +81,15 @@ export const publicService = {
     return data || [];
   },
 
+  // Admin-authored overrides for the 18 public event-page tracks. Returns raw
+  // rows; src/lib/tracks.js merges them over the static defaults.
+  async getTracks() {
+    if (!supabase) return [];
+    const { data, error } = await supabase.rpc('get_public_tracks');
+    if (error) throw error;
+    return data || [];
+  },
+
   async registerForEvent({
     fullName,
     email,
@@ -817,6 +826,80 @@ export const adminService = {
       .eq('id', eventId);
     if (error) throw error;
     await logAudit(curAdmin?.email, 'SOFT_DELETE_EVENT', 'event', eventId);
+    return true;
+  },
+
+  // ── Public event-page tracks (src/data/tracks.js overrides) ──
+  /**
+   * Read only the fields that differ from the shipped defaults so the editor
+   * does not store a full copy of every track on first save.
+   */
+  async getTrackOverrides() {
+    if (!supabase) return [];
+    const { data, error } = await supabase
+      .from('event_tracks')
+      .select('*')
+      .is('deleted_at', null)
+      .order('slug', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getTrackStats() {
+    if (!supabase) return [];
+    const { data, error } = await supabase.rpc('admin_track_stats');
+    if (error) throw error;
+    return data || [];
+  },
+
+  /**
+   * Upsert only the admin-edited fields for a track. Passing `registration_open`
+   * alone is enough to pause or resume a single public event page.
+   */
+  async saveTrackOverride(slug, values) {
+    if (!supabase) throw new Error('The admin portal is temporarily unavailable. Please try again shortly.');
+    if (!slug) throw new Error('A track slug is required.');
+
+    const curAdmin = await this.getCurrentAdmin();
+
+    const payload = {
+      slug,
+      ...values,
+      deleted_at: null,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Empty strings from cleared text inputs should fall back to the static
+    // defaults, so store null instead of an empty override.
+    Object.keys(payload).forEach((key) => {
+      if (typeof payload[key] === 'string' && payload[key].trim() === '') payload[key] = null;
+    });
+
+    const { data, error } = await supabase
+      .from('event_tracks')
+      .upsert(payload, { onConflict: 'slug' })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    await logAudit(curAdmin?.email, 'SAVE_TRACK_OVERRIDE', 'event_track', slug, {
+      title: data?.title || null,
+      registration_open: data?.registration_open,
+      capacity: data?.capacity ?? null,
+    });
+    return data;
+  },
+
+  async resetTrackOverride(slug) {
+    if (!supabase) return false;
+    const curAdmin = await this.getCurrentAdmin();
+    const { error } = await supabase
+      .from('event_tracks')
+      .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq('slug', slug);
+    if (error) throw error;
+    await logAudit(curAdmin?.email, 'RESET_TRACK_OVERRIDE', 'event_track', slug);
     return true;
   },
 

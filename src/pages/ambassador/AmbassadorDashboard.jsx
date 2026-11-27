@@ -14,7 +14,7 @@ import {
   Users,
   XCircle,
 } from 'lucide-react';
-import { events } from '../../data/tracks.js';
+import { useTracks } from '../../lib/tracks.js';
 import { ambassadorService } from '../../lib/supabase.js';
 
 const formatCnic = (value) => {
@@ -48,13 +48,15 @@ const statusStyles = {
 };
 
 export default function AmbassadorDashboard({ profile, onLogout, onBackToSite }) {
+  const { tracks } = useTracks();
+  const events = tracks;
   const [referrals, setReferrals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [copied, setCopied] = useState('');
-  const [eventSlug, setEventSlug] = useState(events[0]?.slug || '');
+  const [eventSlug, setEventSlug] = useState(tracks[0]?.slug || '');
   const [busyId, setBusyId] = useState('');
   const [notice, setNotice] = useState('');
   const [actionError, setActionError] = useState('');

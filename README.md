@@ -44,7 +44,12 @@ Run these files once in the Supabase SQL Editor, in this order:
    ambassador who owns the referral code approve (participant) or reject a
    pending registration, and `get_ambassador_referrals()` returns the review
    timestamp.
-7. `supabase/microsoft-graph-token-store.sql` — adds the backend-only encrypted
+7. `supabase/event-tracks.sql` — adds `public.event_tracks` (admin-editable
+   overrides for the 18 event-page tracks), `get_public_tracks()` for the public
+   pages, and `admin_track_stats()` for per-track registration counts. It also
+   re-creates `register_for_event(...)` so a track the admin closes rejects new
+   registrations.
+8. `supabase/microsoft-graph-token-store.sql` — adds the backend-only encrypted
    refresh-token row used by the delegated Microsoft Graph mail provider.
 
 The anon key still cannot read or write the registration tables directly. Fresh
@@ -94,8 +99,30 @@ For local testing without the backend invite flow, run
 placeholder email and password. It seeds a ready-to-sign-in ambassador and
 records a `SEED_TEST_AMBASSADOR` audit entry.
 
-Transactional email is handled by the Express backend in `server/`. It uses:
+### Event page tracks (admin editing)
 
+The 18 competition tracks published at `/tracks/:slug` are defined in
+`src/data/tracks.js`. **Admin Portal → Event Page Tracks** lists every track with
+live registration counts (total, pending, approved, waitlisted, rejected) and a
+capacity gauge, and lets an admin edit the public page directly:
+
+- name, category, description, venue, rules
+- start date, end date, registration deadline
+- capacity, min/max team size, team-size label
+- fee, prize pool, winner and runner-up prizes, timings, duration, format,
+  eligibility
+- an independent **registration open/closed** switch per track
+
+Only edited fields are stored in `public.event_tracks`; `src/lib/tracks.js`
+merges each row over the shipped defaults, so clearing a field or using **Reset
+to shipped defaults** restores the original content. Admin writes and resets are
+recorded in `audit_logs`.
+
+When global registration is open, a track's own switch still gates the Register
+button on its event page, and `register_for_event(...)` rejects submissions to a
+closed track even if the form is submitted directly.
+
+Transactional email is handled by the Express backend in `server/`. It uses:
 - the backend-only Supabase Admin API to generate one-time ambassador invite
   and password-reset links;
 - a delegated Microsoft Graph integration with the existing public-client
@@ -141,7 +168,6 @@ Never put the Supabase service-role key, refresh token, or any Microsoft Graph
 credential in a `VITE_` variable or the browser bundle.
 
 ## Architecture
-
 - Clean-URL pages: Home, About, Events, Schedule, FAQ, Ambassador Portal.
 - `src/App.jsx` owns history-based routing, page transitions, and route-level lazy loading.
 - `src/sections/Navbar.jsx` and `src/sections/Footer.jsx` are the only shared sections.

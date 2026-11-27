@@ -340,6 +340,9 @@ DECLARE
   v_code  TEXT := nullif(upper(btrim(coalesce(p_referral_code, ''))), '');
   v_slug  TEXT := nullif(btrim(coalesce(p_event_slug, '')), '');
   v_event TEXT := nullif(btrim(coalesce(p_event_name, '')), '');
+  v_capacity INTEGER;
+  v_taken INTEGER;
+  v_status TEXT := 'pending';
   v_id    UUID;
 BEGIN
   IF length(v_name) < 3 THEN
@@ -366,6 +369,13 @@ BEGIN
     RAISE EXCEPTION 'Event information is missing.' USING ERRCODE = '22023';
   END IF;
 
+  IF EXISTS (
+    SELECT 1 FROM public.event_tracks t
+    WHERE t.slug = v_slug AND t.deleted_at IS NULL AND t.registration_open = FALSE
+  ) THEN
+    RAISE EXCEPTION 'Registration for this event is closed.' USING ERRCODE = '22023';
+  END IF;
+
   IF v_code IS NOT NULL AND NOT EXISTS (
     SELECT 1 FROM public.ambassadors
     WHERE upper(referral_code) = v_code AND status = 'approved' AND deleted_at IS NULL
@@ -380,12 +390,28 @@ BEGIN
     RAISE EXCEPTION 'This email is already registered for this event.' USING ERRCODE = '23505';
   END IF;
 
+  -- A track-level capacity edited by the admin auto-waitlists new entries once
+  -- its approved count reaches the limit.
+  SELECT t.capacity INTO v_capacity
+  FROM public.event_tracks t
+  WHERE t.slug = v_slug AND t.deleted_at IS NULL;
+
+  IF v_capacity IS NOT NULL THEN
+    SELECT count(*) INTO v_taken
+    FROM public.registrations r
+    WHERE r.event_slug = v_slug AND r.status = 'approved' AND r.deleted_at IS NULL;
+
+    IF v_taken >= v_capacity THEN
+      v_status := 'waitlisted';
+    END IF;
+  END IF;
+
   INSERT INTO public.registrations (
     full_name, user_email, phone, cnic, university, roll_number,
     event_slug, event_name, referral_code, status
   ) VALUES (
     v_name, v_email, v_phone, v_cnic, NULL, NULL,
-    v_slug, left(v_event, 160), v_code, 'pending'
+    v_slug, left(v_event, 160), v_code, v_status
   )
   RETURNING id INTO v_id;
 
@@ -812,6 +838,120 @@ $$;
 
 REVOKE ALL ON FUNCTION public.get_ambassador_account() FROM public;
 GRANT EXECUTE ON FUNCTION public.get_ambassador_account() TO authenticated;
+
+-- Admin-authored overrides for the 18 public event-page tracks
+-- (see supabase/event-tracks.sql for the standalone migration).
+CREATE TABLE IF NOT EXISTS public.event_tracks (
+  slug TEXT PRIMARY KEY,
+  title TEXT,
+  category TEXT,
+  description TEXT,
+  venue TEXT,
+  start_date TIMESTAMPTZ,
+  end_date TIMESTAMPTZ,
+  registration_deadline TIMESTAMPTZ,
+  capacity INTEGER CHECK (capacity IS NULL OR capacity > 0),
+  min_team_size INTEGER CHECK (min_team_size IS NULL OR min_team_size > 0),
+  max_team_size INTEGER CHECK (max_team_size IS NULL OR max_team_size > 0),
+  team_size TEXT,
+  fee TEXT,
+  prize TEXT,
+  winner_prize TEXT,
+  runner_up_prize TEXT,
+  timings TEXT,
+  duration TEXT,
+  format TEXT,
+  eligibility TEXT,
+  rules TEXT,
+  registration_open BOOLEAN NOT NULL DEFAULT TRUE,
+  deleted_at TIMESTAMPTZ DEFAULT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.event_tracks ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Admins have full access to event_tracks" ON public.event_tracks;
+CREATE POLICY "Admins have full access to event_tracks" ON public.event_tracks
+  FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.event_tracks TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.get_public_tracks()
+RETURNS TABLE (
+  slug TEXT,
+  title TEXT,
+  category TEXT,
+  description TEXT,
+  venue TEXT,
+  start_date TIMESTAMPTZ,
+  end_date TIMESTAMPTZ,
+  registration_deadline TIMESTAMPTZ,
+  capacity INTEGER,
+  min_team_size INTEGER,
+  max_team_size INTEGER,
+  team_size TEXT,
+  fee TEXT,
+  prize TEXT,
+  winner_prize TEXT,
+  runner_up_prize TEXT,
+  timings TEXT,
+  duration TEXT,
+  format TEXT,
+  eligibility TEXT,
+  rules TEXT,
+  registration_open BOOLEAN
+)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT
+    t.slug, t.title, t.category, t.description, t.venue,
+    t.start_date, t.end_date, t.registration_deadline,
+    t.capacity, t.min_team_size, t.max_team_size, t.team_size,
+    t.fee, t.prize, t.winner_prize, t.runner_up_prize,
+    t.timings, t.duration, t.format, t.eligibility, t.rules,
+    t.registration_open
+  FROM public.event_tracks t
+  WHERE t.deleted_at IS NULL
+  ORDER BY t.slug;
+$$;
+
+REVOKE ALL ON FUNCTION public.get_public_tracks() FROM public;
+GRANT EXECUTE ON FUNCTION public.get_public_tracks() TO anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.admin_track_stats()
+RETURNS TABLE (
+  slug TEXT,
+  total BIGINT,
+  pending BIGINT,
+  approved BIGINT,
+  rejected BIGINT,
+  waitlisted BIGINT,
+  last_registered_at TIMESTAMPTZ
+)
+LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Admin access required.' USING ERRCODE = '42501';
+  END IF;
+
+  RETURN QUERY
+  SELECT
+    r.event_slug,
+    count(*)::BIGINT,
+    count(*) FILTER (WHERE r.status = 'pending')::BIGINT,
+    count(*) FILTER (WHERE r.status = 'approved')::BIGINT,
+    count(*) FILTER (WHERE r.status = 'rejected')::BIGINT,
+    count(*) FILTER (WHERE r.status = 'waitlisted')::BIGINT,
+    max(r.created_at)
+  FROM public.registrations r
+  WHERE r.deleted_at IS NULL
+    AND r.event_slug IS NOT NULL
+  GROUP BY r.event_slug;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.admin_track_stats() FROM public;
+GRANT EXECUTE ON FUNCTION public.admin_track_stats() TO authenticated;
 
 -- Seed Initial Hackathon Events
 INSERT INTO public.events (title, slug, category, description, venue, start_date, end_date, registration_deadline, capacity, min_team_size, max_team_size, rules, registration_open)
