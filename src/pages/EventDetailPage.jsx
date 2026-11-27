@@ -1,11 +1,37 @@
+import { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowUpRight, Calendar, Clock, Mail, MapPin, ShieldCheck, Trophy, Users } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { event as siteEvent } from '../data/event.js';
 import { getEventBySlug } from '../data/tracks.js';
+import { publicService } from '../lib/supabase';
+import RegistrationModal from '../components/RegistrationModal.jsx';
 
 export default function EventDetailPage({ slug, onNavigate }) {
   const reduced = useReducedMotion();
+  const [registerOpen, setRegisterOpen] = useState(false);
+  const [registrationOpen, setRegistrationOpen] = useState(false);
   const item = getEventBySlug(slug);
+
+  // The admin controls the registration window from the portal. Keep the
+  // public button closed unless the setting explicitly says otherwise.
+  useEffect(() => {
+    let active = true;
+    publicService
+      .getSettings()
+      .then((settings) => {
+        if (active) setRegistrationOpen(Boolean(settings?.registration_open));
+      })
+      .catch(() => {
+        if (active) setRegistrationOpen(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const openRegistration = () => {
+    if (registrationOpen) setRegisterOpen(true);
+  };
 
   if (!item) {
     return (
@@ -114,6 +140,34 @@ export default function EventDetailPage({ slug, onNavigate }) {
             <p className="mt-7 max-w-3xl text-base leading-relaxed text-arcade-bone/85 sm:text-lg">
               {item.description}
             </p>
+
+            <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
+              <button
+                type="button"
+                onClick={openRegistration}
+                disabled={!registrationOpen}
+                className={
+                  registrationOpen
+                    ? 'group inline-flex items-center justify-center gap-3 bg-arcade-lime px-6 py-4 text-[11px] font-bold uppercase tracking-[0.18em] text-arcade-ink transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-bone focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-ink'
+                    : 'inline-flex cursor-not-allowed items-center justify-center border border-white/20 bg-arcade-coal px-6 py-4 text-[11px] font-bold uppercase tracking-[0.18em] text-arcade-mute'
+                }
+              >
+                {registrationOpen ? (
+                  <>
+                    Register Now
+                    <ArrowUpRight
+                      className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                      aria-hidden="true"
+                    />
+                  </>
+                ) : (
+                  'Registration not open'
+                )}
+              </button>
+              <span className="font-display text-[10px] font-bold uppercase tracking-[0.16em] text-arcade-mute">
+                Fee: {item.fee}
+              </span>
+            </div>
           </div>
 
           <div className="lg:col-span-4">
@@ -217,29 +271,58 @@ export default function EventDetailPage({ slug, onNavigate }) {
               </div>
 
               <div className="border border-white/15 bg-arcade-coal p-6">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-arcade-mute">
-                  Registration Status
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-arcade-lime">
+                  Registration
                 </p>
                 <p className="mt-2 text-lg font-bold uppercase text-arcade-bone">
                   {item.status}
                 </p>
                 <p className="mt-2 text-xs leading-relaxed text-arcade-mute">
-                  Want to represent CITE 2026 at your campus while registrations open?
+                  Reserve your spot for {item.name}. Every entry is reviewed by the CITE organizing
+                  committee before confirmation.
                 </p>
+                <button
+                  type="button"
+                  onClick={openRegistration}
+                  disabled={!registrationOpen}
+                  className={
+                    registrationOpen
+                      ? 'group mt-5 inline-flex w-full items-center justify-center gap-2 bg-arcade-lime px-5 py-3.5 text-[11px] font-bold uppercase tracking-[0.18em] text-arcade-ink transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-arcade-bone focus-visible:ring-offset-2 focus-visible:ring-offset-arcade-coal'
+                      : 'mt-5 inline-flex w-full cursor-not-allowed items-center justify-center border border-white/20 bg-arcade-coal px-5 py-3.5 text-[11px] font-bold uppercase tracking-[0.18em] text-arcade-mute'
+                  }
+                >
+                  {registrationOpen ? (
+                    <>
+                      Register Now
+                      <ArrowUpRight
+                        className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                        aria-hidden="true"
+                      />
+                    </>
+                  ) : (
+                    'Registration not open'
+                  )}
+                </button>
                 <a
                   href={siteEvent.registrationUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-5 inline-flex w-full items-center justify-center gap-2 bg-arcade-lime px-5 py-3.5 text-[11px] font-bold uppercase tracking-[0.18em] text-arcade-ink transition-transform hover:-translate-y-0.5"
+                  className="mt-3 inline-flex w-full items-center justify-center gap-2 border border-white/20 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.16em] text-arcade-bone transition-colors hover:border-arcade-lime hover:text-arcade-lime"
                 >
-                  Register as an Ambassador
-                  <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                  Become a Campus Ambassador
+                  <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                 </a>
               </div>
             </div>
           </aside>
         </section>
       </div>
+
+      <RegistrationModal
+        open={registerOpen}
+        event={item}
+        onClose={() => setRegisterOpen(false)}
+      />
     </div>
   );
 }

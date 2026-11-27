@@ -12,6 +12,8 @@ const pageLoaders = {
   schedule: () => import('./pages/SchedulePage.jsx'),
   faq: () => import('./pages/FaqPage.jsx'),
   admin: () => import('./pages/admin/AdminPortal.jsx'),
+  ambassador: () => import('./pages/ambassador/AmbassadorPortal.jsx'),
+  ambassadorSetup: () => import('./pages/ambassador/AmbassadorSetup.jsx'),
 };
 
 const AboutPage = lazy(pageLoaders.about);
@@ -20,13 +22,15 @@ const EventDetailPage = lazy(pageLoaders.event);
 const SchedulePage = lazy(pageLoaders.schedule);
 const FaqPage = lazy(pageLoaders.faq);
 const AdminPortal = lazy(pageLoaders.admin);
+const AmbassadorPortal = lazy(pageLoaders.ambassador);
+const AmbassadorSetup = lazy(pageLoaders.ambassadorSetup);
 
 export function prefetchPage(pageId) {
   const loader = pageLoaders[pageId];
   if (loader) loader();
 }
 
-const ROUTES = ['about', 'tracks', 'schedule', 'faq', 'admin'];
+const ROUTES = ['about', 'tracks', 'schedule', 'faq', 'admin', 'ambassador', 'ambassadorSetup'];
 
 // Map a clean URL path to a page id (and optional event slug), with support for a deployed base path.
 function getRouteFromPath() {
@@ -42,6 +46,10 @@ function getRouteFromPath() {
 
   if (first === 'tracks' && segments[1]) {
     return { page: 'event', eventSlug: decodeURIComponent(segments[1]) };
+  }
+
+  if (first === 'ambassador' && segments[1] === 'setup') {
+    return { page: 'ambassadorSetup', eventSlug: '' };
   }
 
   return { page: ROUTES.includes(first) ? first : 'home', eventSlug: '' };
@@ -96,6 +104,8 @@ export default function App() {
   };
 
   const isAdmin = activePage === 'admin';
+  const isBareShell =
+    isAdmin || activePage === 'ambassador' || activePage === 'ambassadorSetup';
 
   const renderPage = () => {
     switch (activePage) {
@@ -111,6 +121,21 @@ export default function App() {
         return <FaqPage onNavigate={handleNavigate} />;
       case 'admin':
         return <AdminPortal onBackToSite={() => handleNavigate('home', '/')} />;
+      case 'ambassador':
+        return (
+          <AmbassadorPortal
+            onBackToSite={() => handleNavigate('home', '/')}
+            onNavigate={handleNavigate}
+          />
+        );
+      case 'ambassadorSetup':
+        return (
+          <AmbassadorSetup
+            onBackToSite={() => handleNavigate('home', '/')}
+            onGoToPortal={() => handleNavigate('ambassador', '/ambassador')}
+            onComplete={() => handleNavigate('ambassador', '/ambassador')}
+          />
+        );
       case 'home':
       default:
         return <HomePage onNavigate={handleNavigate} />;
@@ -120,7 +145,7 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
       <div className="min-h-screen bg-arcade-ink text-arcade-bone flex flex-col justify-between selection:bg-arcade-lime selection:text-arcade-ink">
-        {!isAdmin && <Navbar activePage={activePage === 'event' ? 'tracks' : activePage} onNavigate={handleNavigate} />}
+        {!isBareShell && <Navbar activePage={activePage === 'event' ? 'tracks' : activePage} onNavigate={handleNavigate} />}
         <main className="flex-1">
           <AnimatePresence mode="wait" initial={false}>
             <PageTransition key={activePage === 'event' ? `event-${route.eventSlug}` : activePage}>
@@ -130,7 +155,7 @@ export default function App() {
             </PageTransition>
           </AnimatePresence>
         </main>
-        {!isAdmin && <Footer onNavigate={handleNavigate} />}
+        {!isBareShell && <Footer onNavigate={handleNavigate} />}
       </div>
     </MotionConfig>
   );

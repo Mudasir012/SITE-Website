@@ -19,6 +19,8 @@ export default function AdminEvents() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
+  const [registrationOpen, setRegistrationOpen] = useState(false);
+  const [settingsLoading, setSettingsLoading] = useState(true);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -55,8 +57,19 @@ export default function AdminEvents() {
     }
   };
 
+  const loadSettings = async () => {
+    try {
+      setRegistrationOpen(await adminService.getRegistrationOpen());
+    } catch (err) {
+      console.error('Error fetching registration settings:', err);
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadEvents();
+    loadSettings();
   }, []);
 
   const openCreateModal = () => {
@@ -115,6 +128,30 @@ export default function AdminEvents() {
   const handleToggleRegistration = async (eventId, currentStatus) => {
     await adminService.toggleEventRegistration(eventId, !currentStatus);
     loadEvents();
+  };
+
+  const handleToggleSiteRegistration = () => {
+    const next = !registrationOpen;
+    setConfirmModal({
+      isOpen: true,
+      title: next ? 'Open public registration?' : 'Close public registration?',
+      message: next
+        ? 'The “Register Now” button will go live on all public event pages and visitors will be able to submit registrations.'
+        : 'The “Register Now” button will be replaced with “Registration not open” and new submissions will be rejected.',
+      confirmText: next ? 'Open Registration' : 'Close Registration',
+      isDestructive: !next,
+      action: async () => {
+        try {
+          await adminService.setRegistrationOpen(next);
+          setRegistrationOpen(next);
+        } catch (err) {
+          console.error('Error updating registration window:', err);
+          alert('Unable to update registration status. Please try again.');
+        } finally {
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        }
+      },
+    });
   };
 
   const handleToggleArchive = async (eventId, isArchived) => {
@@ -179,6 +216,46 @@ export default function AdminEvents() {
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
+      </div>
+
+      {/* Master registration switch for the public site */}
+      <div className={`border rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+        registrationOpen
+          ? 'bg-emerald-50 border-emerald-200'
+          : 'bg-amber-50 border-amber-200'
+      }`}>
+        <div className="flex items-start gap-3">
+          {registrationOpen ? (
+            <ToggleRight className="w-6 h-6 text-emerald-600 flex-shrink-0 mt-0.5" />
+          ) : (
+            <ToggleLeft className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+          )}
+          <div>
+            <h3 className={`text-sm font-bold ${registrationOpen ? 'text-emerald-900' : 'text-amber-900'}`}>
+              Public Registration
+            </h3>
+            <p className={`text-xs mt-1 ${registrationOpen ? 'text-emerald-800' : 'text-amber-800'}`}>
+              {registrationOpen
+                ? 'Registration is open. Visitors can submit the form on event pages.'
+                : 'Registration is closed. Event pages show “Registration not open” and new submissions are blocked.'}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={handleToggleSiteRegistration}
+          disabled={settingsLoading}
+          className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all disabled:opacity-50 ${
+            registrationOpen
+              ? 'bg-white text-rose-700 border-rose-200 hover:bg-rose-50'
+              : 'bg-slate-900 text-white border-slate-900 hover:bg-slate-800'
+          }`}
+        >
+          {settingsLoading
+            ? 'Loading…'
+            : registrationOpen
+              ? 'Close Registration'
+              : 'Open Registration'}
+        </button>
       </div>
 
       {/* Events Grid */}

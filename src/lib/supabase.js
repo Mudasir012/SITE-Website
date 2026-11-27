@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { apiFetch } from './api.js';
 import {
   sendRegistrationApprovalEmail,
   sendBroadcastEmail,
@@ -35,6 +36,14 @@ const escapeCsvCell = (value) => {
   return `"${cell.replace(/"/g, '""')}"`;
 };
 
+async function getAdminAccessToken() {
+  if (!supabase) return null;
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  return session?.access_token || null;
+}
+
 // Helper to log audit trail directly into Supabase audit_logs table
 async function logAudit(actor_email, action, entity_type, entity_id = null, details = {}) {
   if (!supabase) return;
@@ -52,6 +61,136 @@ async function logAudit(actor_email, action, entity_type, entity_id = null, deta
     console.warn('Audit log write error:', err);
   }
 }
+
+// ── Public site services ─────────────────────────────────────────────────────
+// These call SECURITY DEFINER RPCs so the anon key can list approved
+// ambassadors and submit a validated registration without table access.
+export const publicService = {
+  async getSettings() {
+    if (!supabase) return { registration_open: false };
+    const { data, error } = await supabase.rpc('get_public_settings');
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    return { registration_open: Boolean(row?.registration_open) };
+  },
+
+  async getAmbassadors() {
+    if (!supabase) return [];
+    const { data, error } = await supabase.rpc('list_public_ambassadors');
+    if (error) throw error;
+    return data || [];
+  },
+
+  async registerForEvent({
+    fullName,
+    email,
+    phone,
+    cnic,
+    referralCode,
+    eventSlug,
+    eventName,
+  }) {
+    if (!supabase) {
+      throw new Error('Registration is temporarily unavailable. Please try again shortly.');
+    }
+
+    const { data, error } = await supabase.rpc('register_for_event', {
+      p_full_name: fullName,
+      p_user_email: email,
+      p_phone: phone,
+      p_cnic: cnic,
+      p_referral_code: referralCode || null,
+      p_event_slug: eventSlug,
+      p_event_name: eventName,
+    });
+
+    if (error) throw error;
+    return data;
+  },
+};
+
+// ── Ambassador portal ────────────────────────────────────────────────────────
+// Accounts are created from an admin email invitation. All profile and
+// registration reads are SECURITY DEFINER RPCs scoped to auth.uid().
+export const ambassadorService = {
+  async getCurrentUser() {
+    if (!supabase) return null;
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    if (error) return null;
+    return user || null;
+  },
+
+  async signIn(email, password) {
+    if (!supabase) throw new Error('The ambassador portal is temporarily unavailable.');
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: String(email || '').trim(),
+      password,
+    });
+    if (error) throw error;
+    return data.user;
+  },
+
+  async requestPasswordReset(email) {
+    if (!supabase) throw new Error('The ambassador portal is temporarily unavailable.');
+    const { error } = await supabase.auth.resetPasswordForEmail(String(email || '').trim(), {
+      redirectTo: `${window.location.origin}/ambassador/setup?reset=1`,
+    });
+    if (error) throw error;
+    return true;
+  },
+
+  async updatePassword(password) {
+    if (!supabase) throw new Error('The ambassador portal is temporarily unavailable.');
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+    return true;
+  },
+
+  async completeSetup({ fullName, phone, cnic, university, password }) {
+    if (!supabase) throw new Error('The ambassador portal is temporarily unavailable.');
+
+    const { error: passwordError } = await supabase.auth.updateUser({ password });
+    if (passwordError) throw passwordError;
+
+    const { data, error } = await supabase.rpc('complete_ambassador_setup', {
+      p_full_name: fullName,
+      p_phone: phone,
+      p_cnic: cnic,
+      p_university: university,
+    });
+    if (error) throw error;
+    return Array.isArray(data) ? data[0] : data;
+  },
+
+  async getAccount() {
+    if (!supabase) throw new Error('The ambassador portal is temporarily unavailable.');
+    const { data, error } = await supabase.rpc('get_ambassador_account');
+    if (error) throw error;
+    return Array.isArray(data) ? data[0] : data;
+  },
+
+  async getDashboard() {
+    if (!supabase) throw new Error('The ambassador portal is temporarily unavailable.');
+    const { data, error } = await supabase.rpc('get_ambassador_dashboard');
+    if (error) throw error;
+    return Array.isArray(data) ? data[0] : data;
+  },
+
+  async getReferrals() {
+    if (!supabase) return [];
+    const { data, error } = await supabase.rpc('get_ambassador_referrals');
+    if (error) throw error;
+    return data || [];
+  },
+
+  async logout() {
+    if (!supabase) return;
+    await supabase.auth.signOut();
+  },
+};
 
 export const adminService = {
   // ── Authentication & Sessions ──
@@ -175,6 +314,7 @@ export const adminService = {
         trend: [],
         eventCapacities: [],
         recentActivity: [],
+        registrationOpen: false,
       };
     }
 
@@ -184,12 +324,14 @@ export const adminService = {
       { data: teams },
       { data: ambassadors },
       { data: auditLogs },
+      { data: settings },
     ] = await Promise.all([
       supabase.from('registrations').select('*').is('deleted_at', null),
       supabase.from('events').select('*').is('deleted_at', null).eq('is_archived', false),
       supabase.from('teams').select('*').is('deleted_at', null),
       supabase.from('ambassadors').select('*').is('deleted_at', null),
       supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(8),
+      supabase.from('site_settings').select('registration_open').eq('id', 1).maybeSingle(),
     ]);
 
     const regList = regs || [];
@@ -246,7 +388,37 @@ export const adminService = {
       trend,
       eventCapacities,
       recentActivity: auditLogs || [],
+      registrationOpen: Boolean(settings?.registration_open),
     };
+  },
+
+  // ── Global registration window ──
+  async getRegistrationOpen() {
+    if (!supabase) return false;
+    const { data, error } = await supabase
+      .from('site_settings')
+      .select('registration_open')
+      .eq('id', 1)
+      .maybeSingle();
+    if (error) throw error;
+    return Boolean(data?.registration_open);
+  },
+
+  async setRegistrationOpen(open) {
+    if (!supabase) throw new Error('The admin portal is temporarily unavailable. Please try again shortly.');
+    const admin = await this.getCurrentAdmin();
+    if (!admin) throw new Error('Your admin session has expired. Please sign in again.');
+
+    const { error } = await supabase
+      .from('site_settings')
+      .update({ registration_open: open, updated_at: new Date().toISOString() })
+      .eq('id', 1);
+    if (error) throw error;
+
+    await logAudit(admin.email, open ? 'REGISTRATION_OPENED' : 'REGISTRATION_CLOSED', 'settings', '1', {
+      registration_open: open,
+    });
+    return true;
   },
 
   // ── Registrations Management ──
@@ -271,7 +443,7 @@ export const adminService = {
 
     const searchTerm = safeFilterText(search);
     if (searchTerm) {
-      query = query.or(`full_name.ilike.%${searchTerm}%,user_email.ilike.%${searchTerm}%,university.ilike.%${searchTerm}%,roll_number.ilike.%${searchTerm}%`);
+      query = query.or(`full_name.ilike.%${searchTerm}%,user_email.ilike.%${searchTerm}%,university.ilike.%${searchTerm}%,roll_number.ilike.%${searchTerm}%,cnic.ilike.%${searchTerm}%,event_name.ilike.%${searchTerm}%`);
     }
 
     query = query.order(sortBy, { ascending: sortOrder === 'asc' });
@@ -329,9 +501,10 @@ export const adminService = {
 
     if (error) throw error;
 
-    // Send real approval confirmation email via Resend
+    // Send the approval confirmation through the backend email service.
     if (newStatus === 'approved' && data?.user_email) {
       try {
+        const accessToken = await getAdminAccessToken();
         const { data: evData } = await supabase
           .from('events')
           .select('title, venue, start_date')
@@ -341,9 +514,10 @@ export const adminService = {
         await sendRegistrationApprovalEmail({
           to: data.user_email,
           fullName: data.full_name,
-          eventTitle: evData?.title || 'CITE 2026 Track',
+          eventTitle: evData?.title || data.event_name || 'CITE 2026 Track',
           venue: evData?.venue || 'CS Complex, COMSATS Abbottabad',
           dates: evData?.start_date ? new Date(evData.start_date).toLocaleDateString() : 'December 2026',
+          accessToken,
         });
       } catch (mailErr) {
         console.warn('[Approval Email Dispatch Error]:', mailErr);
@@ -612,7 +786,7 @@ export const adminService = {
     if (status !== 'all') query = query.eq('status', status);
     const searchTerm = safeFilterText(search);
     if (searchTerm) {
-      query = query.or(`full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,university.ilike.%${searchTerm}%,referral_code.ilike.%${searchTerm}%`);
+      query = query.or(`full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,university.ilike.%${searchTerm}%,cnic.ilike.%${searchTerm}%,referral_code.ilike.%${searchTerm}%`);
     }
 
     const { data: ambassadors, error } = await query.order('referral_count', { ascending: false });
@@ -640,16 +814,64 @@ export const adminService = {
 
   async updateAmbassadorStatus(id, status) {
     if (!supabase) return null;
+    if (!['approved', 'rejected'].includes(status)) {
+      throw new Error('Only approval or rejection is allowed from this action.');
+    }
+
     const curAdmin = await this.getCurrentAdmin();
+    const { data: current } = await supabase
+      .from('ambassadors')
+      .select('status, signup_completed_at, full_name, email')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (!current) throw new Error('Ambassador account not found.');
+    if (!current.signup_completed_at) {
+      throw new Error('This ambassador has not created an account yet. Only completed accounts can be reviewed.');
+    }
+
     const { data, error } = await supabase
       .from('ambassadors')
-      .update({ status, updated_at: new Date().toISOString() })
+      .update({
+        status,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: curAdmin?.email || 'admin@cite.org',
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', id)
       .select()
       .single();
     if (error) throw error;
-    await logAudit(curAdmin?.email, 'UPDATE_AMBASSADOR_STATUS', 'ambassador', id, { status });
+
+    await logAudit(curAdmin?.email, 'UPDATE_AMBASSADOR_STATUS', 'ambassador', id, {
+      previousStatus: current.status,
+      status,
+      email: current.email,
+    });
     return data;
+  },
+
+  async inviteAmbassador(email) {
+    if (!supabase) throw new Error('The admin portal is temporarily unavailable.');
+    const accessToken = await getAdminAccessToken();
+    if (!accessToken) throw new Error('Your admin session has expired. Please sign in again.');
+
+    return apiFetch('/api/ambassadors/invite', {
+      method: 'POST',
+      accessToken,
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  async deleteAmbassadorAccount(id) {
+    if (!supabase) throw new Error('The admin portal is temporarily unavailable.');
+    const accessToken = await getAdminAccessToken();
+    if (!accessToken) throw new Error('Your admin session has expired. Please sign in again.');
+
+    return apiFetch(`/api/ambassadors/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      accessToken,
+    });
   },
 
   // ── Communication & Announcements ──
@@ -699,6 +921,8 @@ export const adminService = {
   async sendAnnouncement({ subject, body, targetGroup, eventId, isTest = false, testRecipient = '' }) {
     if (!supabase) throw new Error('The admin portal is temporarily unavailable. Please try again shortly.');
     const curAdmin = await this.getCurrentAdmin();
+    const accessToken = await getAdminAccessToken();
+    if (!accessToken) throw new Error('Your admin session has expired. Please sign in again.');
     const count = isTest ? 1 : await this.previewRecipientCount(targetGroup, eventId);
 
     const announcement = {
@@ -719,9 +943,9 @@ export const adminService = {
 
     if (error) throw error;
 
-    // Deliver real email to inbox via Resend
-    let resendSent = 0;
-    let resendError = null;
+    // Deliver through the backend email service.
+    let emailsSent = 0;
+    let emailError = null;
 
     if (isTest && testRecipient) {
       try {
@@ -729,10 +953,11 @@ export const adminService = {
           to: testRecipient.trim(),
           subject,
           body,
+          accessToken,
         });
-        resendSent = 1;
+        emailsSent = 1;
       } catch (deliveryErr) {
-        console.error('[Resend Test Delivery Error]:', deliveryErr);
+        console.error('[Test Email Delivery Error]:', deliveryErr);
         throw deliveryErr;
       }
     } else if (!isTest) {
@@ -744,17 +969,23 @@ export const adminService = {
               to: recipient,
               subject,
               body,
+              accessToken,
             });
-            resendSent++;
+            emailsSent++;
           } catch (err) {
             console.warn(`Failed to dispatch email to ${recipient}:`, err);
-            resendError = err.message;
+            emailError = err.message;
           }
         }
       }
     }
 
-    await logAudit(curAdmin?.email, isTest ? 'SEND_TEST_EMAIL' : 'SEND_ANNOUNCEMENT', 'announcement', data?.id, { subject, recipient_count: count, resendSent });
+    await logAudit(curAdmin?.email, isTest ? 'SEND_TEST_EMAIL' : 'SEND_ANNOUNCEMENT', 'announcement', data?.id, {
+      subject,
+      recipient_count: count,
+      emails_sent: emailsSent,
+      email_error: emailError,
+    });
     return data;
   },
 
@@ -821,9 +1052,11 @@ export const adminService = {
       'Full Name',
       'Email',
       'Phone',
+      'CNIC',
       'University',
       'Roll Number',
       'Gender',
+      'Event',
       'Event ID',
       'Team ID',
       'Is Leader',
@@ -838,9 +1071,11 @@ export const adminService = {
       escapeCsvCell(r.full_name),
       escapeCsvCell(r.user_email),
       escapeCsvCell(r.phone),
+      escapeCsvCell(r.cnic),
       escapeCsvCell(r.university),
       escapeCsvCell(r.roll_number),
       escapeCsvCell(r.gender),
+      escapeCsvCell(r.event_name),
       escapeCsvCell(r.event_id),
       escapeCsvCell(r.team_id),
       escapeCsvCell(r.is_leader ? 'Yes' : 'No'),

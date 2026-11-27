@@ -145,9 +145,10 @@ export default function AdminRegistrations({ initialFilterStatus = 'all' }) {
     );
   };
 
-  const getEventTitle = (eventId) => {
-    const ev = events.find(e => e.id === eventId);
-    return ev ? ev.title : 'Track Event';
+  const getEventTitle = (reg) => {
+    if (!reg) return 'Track Event';
+    const ev = events.find(e => e.id === reg.event_id);
+    return ev ? ev.title : (reg.event_name || 'Track Event');
   };
 
   const getStatusBadge = (status) => {
@@ -370,12 +371,12 @@ export default function AdminRegistrations({ initialFilterStatus = 'all' }) {
                         <div className="text-[11px] text-slate-400 font-mono">{reg.user_email}</div>
                       </td>
                       <td className="py-3.5 px-4">
-                        <div className="text-slate-700 font-medium">{reg.university}</div>
-                        <div className="text-[11px] text-slate-400 font-mono">{reg.roll_number}</div>
+                        <div className="text-slate-700 font-medium">{reg.university || '—'}</div>
+                        <div className="text-[11px] text-slate-400 font-mono">{reg.roll_number || '—'}</div>
                       </td>
                       <td className="py-3.5 px-4">
                         <span className="text-slate-800 font-medium line-clamp-1 max-w-xs">
-                          {getEventTitle(reg.event_id)}
+                          {getEventTitle(reg)}
                         </span>
                       </td>
                       <td className="py-3.5 px-4">
@@ -518,16 +519,20 @@ export default function AdminRegistrations({ initialFilterStatus = 'all' }) {
                   <span className="text-slate-900 font-mono font-medium">{activeParticipant.phone}</span>
                 </div>
                 <div>
+                  <span className="text-slate-400 block font-bold uppercase text-[10px] mb-0.5">CNIC</span>
+                  <span className="text-slate-900 font-mono font-medium">{activeParticipant.cnic || '—'}</span>
+                </div>
+                <div>
                   <span className="text-slate-400 block font-bold uppercase text-[10px] mb-0.5">Institution</span>
-                  <span className="text-slate-900 font-semibold">{activeParticipant.university}</span>
+                  <span className="text-slate-900 font-semibold">{activeParticipant.university || '—'}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 block font-bold uppercase text-[10px] mb-0.5">Roll Number</span>
-                  <span className="text-slate-900 font-mono font-medium">{activeParticipant.roll_number}</span>
+                  <span className="text-slate-900 font-mono font-medium">{activeParticipant.roll_number || '—'}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 block font-bold uppercase text-[10px] mb-0.5">Track Event</span>
-                  <span className="text-slate-900 font-bold">{getEventTitle(activeParticipant.event_id)}</span>
+                  <span className="text-slate-900 font-bold">{getEventTitle(activeParticipant)}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 block font-bold uppercase text-[10px] mb-0.5">Referral Code</span>

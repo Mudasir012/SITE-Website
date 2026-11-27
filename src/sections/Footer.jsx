@@ -91,6 +91,15 @@ export default function Footer({ onNavigate }) {
                 Register as an Ambassador →
               </a>
             </li>
+            <li>
+              <button
+                type="button"
+                onClick={() => onNavigate('ambassador', '/ambassador')}
+                className="font-bold text-arcade-lime transition-colors hover:text-white"
+              >
+                Ambassador Portal →
+              </button>
+            </li>
           </ul>
         </div>
 

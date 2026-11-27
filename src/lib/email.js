@@ -1,5 +1,8 @@
-// Email templates. Delivery always goes through the server-side endpoint
-// (/api/send-email) so the Resend key is never exposed to the browser.
+// Email templates. Delivery always goes through the Express backend
+// (/api/email/send), which holds the Supabase service-role and Microsoft 365
+// credentials. No email provider secret ever reaches the browser.
+
+import { apiFetch } from './api.js';
 
 const escapeHtml = (value) =>
   String(value ?? '').replace(/[&<>"']/g, (char) => ({
@@ -12,50 +15,44 @@ const escapeHtml = (value) =>
 
 export async function getEmailStatus() {
   try {
-    const res = await fetch('/api/send-email', { method: 'GET' });
-    if (!res.ok) return { configured: false };
-    return await res.json();
+    return await apiFetch('/api/email/status');
   } catch {
-    return { configured: false };
+    return { configured: false, provider: 'unavailable' };
   }
 }
 
-export async function sendEmail({ to, subject, html, text }) {
-  let res;
-  try {
-    res = await fetch('/api/send-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        to: Array.isArray(to) ? to : [to],
-        subject,
-        html: html || `<p>${escapeHtml(text || '').replace(/\n/g, '<br/>')}</p>`,
-        text: text || '',
-      }),
-    });
-  } catch {
-    throw new Error('Email service is temporarily unavailable. Please try again.');
+export async function sendEmail({ to, subject, html, text, accessToken }) {
+  if (!accessToken) {
+    throw new Error('Your admin session has expired. Please sign in again.');
   }
 
-  const data = await res.json().catch(() => ({}));
+  const recipient = Array.isArray(to) ? to[0] : to;
+  if (!recipient) throw new Error('A recipient email is required.');
 
-  if (!res.ok) {
-    const reason = data?.error?.message || data?.error || data?.message;
-    throw new Error(
-      typeof reason === 'string' && reason
-        ? reason
-        : `Email service rejected the request (HTTP ${res.status}).`
-    );
-  }
+  const data = await apiFetch('/api/email/send', {
+    method: 'POST',
+    accessToken,
+    body: JSON.stringify({
+      to: recipient,
+      subject,
+      html: html || `<p>${escapeHtml(text || '').replace(/\n/g, '<br/>')}</p>`,
+      text: text || '',
+    }),
+  });
 
-  if (!data?.id) throw new Error('Email service did not confirm delivery.');
-  return { success: true, id: data.id };
+  if (!data?.success) throw new Error('Email service did not confirm delivery.');
+  return {
+    success: true,
+    id: data.deliveryId || data.id || null,
+    provider: data.provider,
+    mock: Boolean(data.mock),
+  };
 }
 
 /**
  * Participant Approval Email Template
  */
-export async function sendRegistrationApprovalEmail({ to, fullName, eventTitle, venue, dates }) {
+export async function sendRegistrationApprovalEmail({ to, fullName, eventTitle, venue, dates, accessToken }) {
   const safeName = escapeHtml(fullName);
   const safeTitle = escapeHtml(eventTitle || 'Flagship Hackathon');
   const safeVenue = escapeHtml(venue || 'CS Complex, COMSATS Abbottabad');
@@ -107,13 +104,14 @@ export async function sendRegistrationApprovalEmail({ to, fullName, eventTitle, 
     subject: `Congratulations! Your CITE 2026 Registration is Approved (${safeTitle})`,
     html,
     text: `Dear ${fullName},\n\nYour registration for ${eventTitle} has been officially approved.\n\nVenue: ${venue}\nDates: ${dates}\n\nCOMSATS University Abbottabad`,
+    accessToken,
   });
 }
 
 /**
  * Announcement / Broadcast Template
  */
-export async function sendBroadcastEmail({ to, subject, body }) {
+export async function sendBroadcastEmail({ to, subject, body, accessToken }) {
   const safeBody = escapeHtml(body);
   const html = `
     <!DOCTYPE html>
@@ -150,5 +148,6 @@ export async function sendBroadcastEmail({ to, subject, body }) {
     subject,
     html,
     text: body,
+    accessToken,
   });
 }

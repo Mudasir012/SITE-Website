@@ -13,10 +13,114 @@ npm run preview
 
 Requires Node.js 18+.
 
+## Registration database setup
+
+The event detail page opens an on-site registration form (name, email, CNIC,
+phone, and an optional campus ambassador). Registrations are written to Supabase
+and appear in the admin portal under **Registrations**. Public registration is
+**closed by default** and is switched on by an admin in
+**Admin Portal → Events & Tracks → Public Registration**. Until then, event pages
+show a disabled “Registration not open” button and the database rejects
+submissions.
+
+Run these files once in the Supabase SQL Editor, in this order:
+
+1. `supabase/registration-form.sql` — adds the `cnic`, `event_slug`, and
+   `event_name` columns and creates two validated `SECURITY DEFINER` functions:
+   - `list_public_ambassadors()` — public-safe list of approved ambassadors.
+   - `register_for_event(...)` — validates and inserts one pending registration.
+2. `supabase/registration-toggle.sql` — adds the `site_settings` table,
+   `get_public_settings()` for the public button state, and a trigger that blocks
+   inserts while registration is closed.
+3. `supabase/ambassador-portal.sql` — links ambassador rows to Supabase Auth,
+   adds the dashboard/referral RPCs, and tracks invite timestamps.
+4. `supabase/email-deliveries.sql` — adds the email delivery audit table used by
+   the backend.
+5. `supabase/ambassador-accounts.sql` — adds CNIC/signup fields, the
+   `complete_ambassador_setup()` and `get_ambassador_account()` RPCs, and the
+   `invited` status used by the invitation flow.
+6. `supabase/microsoft-graph-token-store.sql` — adds the backend-only encrypted
+   refresh-token row used by the delegated Microsoft Graph mail provider.
+
+The anon key still cannot read or write the registration tables directly. Fresh
+projects can run `supabase/schema.sql` instead, which includes all of the above.
+
+## Ambassador portal and email backend
+
+The ambassador portal lives at `/ambassador`. The flow is:
+
+1. An admin enters an ambassador's email in **Admin Portal → Ambassadors** and
+   sends an invitation.
+2. The backend creates a Supabase Auth invite and emails a setup link.
+3. The ambassador opens `/ambassador/setup`, sets a password, and submits their
+   name, phone, CNIC, and university. Their account becomes **pending approval**.
+4. The admin reviews the account and approves or rejects it. Only approved
+   ambassadors see the dashboard.
+5. Afterwards the ambassador signs in at `/ambassador` with that email and
+   password. **Forgot password?** sends a Supabase recovery link that opens
+   `/ambassador/setup?reset=1`; allow that URL in Supabase → Authentication →
+   URL Configuration.
+
+The admin list shows invite-sent, pending, approved, and rejected states, opens
+full details for any ambassador, and can delete an account. Deleting an invitation
+also removes its Supabase Auth user, so the same email can be invited again.
+Deletes, invites, approvals, rejections, and email sends are all written to
+`audit_logs`.
+
+For local testing without the backend invite flow, run
+`supabase/create-test-ambassador.sql` in the SQL Editor after replacing its
+placeholder email and password. It seeds a ready-to-sign-in ambassador and
+records a `SEED_TEST_AMBASSADOR` audit entry.
+
+Transactional email is handled by the Express backend in `server/`. It uses:
+
+- the backend-only Supabase Admin API to generate one-time invite links;
+- a delegated Microsoft Graph integration with the existing public-client
+  registration;
+- an encrypted refresh token stored in `public.microsoft_graph_token_store`,
+  readable only by the backend service-role client;
+- `POST /v1.0/me/sendMail` from the consented mailbox `cite@cuiatd.edu.pk`;
+- a mock provider for local development.
+
+A Graph `202` is recorded as **submitted**, not delivered. The access token is
+cached in memory, the refresh token is AES-256-GCM encrypted in Supabase, and
+neither is exposed to the frontend. Rotations update the Supabase row only if it
+still has the token this process read. Device-code sign-in is an operator
+provisioning step, never an API behavior.
+
+Start both the frontend and backend with:
+
+```bash
+npm run dev
+```
+
+Run the mocked backend tests with:
+
+```bash
+npm test
+```
+
+After applying `supabase/microsoft-graph-token-store.sql`, temporarily set
+`MS_GRAPH_REFRESH_TOKEN` in `.env` and provision the encrypted row without
+sending email:
+
+```bash
+npm run provision:graph-token
+```
+
+Until the encrypted Supabase token row is provisioned, keep
+`EMAIL_PROVIDER=mock`. Captured messages are written to `server/.mail-outbox/`
+and no real email is sent. See `docs/microsoft-365-email-setup.md` for the
+migration, encryption key, token provisioning, recovery, and live validation
+checks.
+
+Never put the Supabase service-role key, refresh token, or any Microsoft Graph
+credential in a `VITE_` variable or the browser bundle.
+
 ## Architecture
 
-- Hash-routed pages: Home, About, Events, Schedule, FAQ.
-- `src/App.jsx` owns hash routing, page transitions, and route-level lazy loading.
+- Clean-URL pages: Home, About, Events, Schedule, FAQ, Ambassador Portal.
+- `src/App.jsx` owns history-based routing, page transitions, and route-level lazy loading.
 - `src/sections/Navbar.jsx` and `src/sections/Footer.jsx` are the only shared sections.
 - `src/pages/` contains one file per route; `src/components/` contains reusable primitives and motion wrappers.
 - All editable content lives in `src/data/`.
