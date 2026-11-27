@@ -51,15 +51,21 @@ The ambassador portal lives at `/ambassador`. The flow is:
 
 1. An admin enters an ambassador's email in **Admin Portal → Ambassadors** and
    sends an invitation.
-2. The backend creates a Supabase Auth invite and emails a setup link.
+2. The backend creates a Supabase Auth invite and emails a one-time
+   `/ambassador/setup?invite_token=...` link. The link goes directly to the
+   site, so it does not depend on Supabase's redirect URL allow-list.
 3. The ambassador opens `/ambassador/setup`, sets a password, and submits their
    name, phone, CNIC, and university. Their account becomes **pending approval**.
 4. The admin reviews the account and approves or rejects it. Only approved
    ambassadors see the dashboard.
 5. Afterwards the ambassador signs in at `/ambassador` with that email and
-   password. **Forgot password?** sends a Supabase recovery link that opens
-   `/ambassador/setup?reset=1`; allow that URL in Supabase → Authentication →
-   URL Configuration.
+   password. **Forgot password?** asks the backend to email a one-time
+   `/ambassador/setup?reset_token=...` link, which also goes directly to the
+   site and does not depend on Supabase's redirect URL allow-list.
+
+In production, set `APP_URL=https://your-domain` in the backend environment.
+When `APP_URL` is empty on Vercel, the backend derives the public origin from
+`VERCEL_PROJECT_PRODUCTION_URL` instead of defaulting to localhost.
 
 The admin list shows invite-sent, pending, approved, and rejected states, opens
 full details for any ambassador, and can delete an account. Deleting an invitation
@@ -74,7 +80,8 @@ records a `SEED_TEST_AMBASSADOR` audit entry.
 
 Transactional email is handled by the Express backend in `server/`. It uses:
 
-- the backend-only Supabase Admin API to generate one-time invite links;
+- the backend-only Supabase Admin API to generate one-time ambassador invite
+  and password-reset links;
 - a delegated Microsoft Graph integration with the existing public-client
   registration;
 - an encrypted refresh token stored in `public.microsoft_graph_token_store`,

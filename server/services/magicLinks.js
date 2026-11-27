@@ -4,10 +4,10 @@ import { normalizeEmail } from '../lib/validation.js';
 import { requireSupabaseAdmin } from './supabaseAdmin.js';
 
 /**
- * Create a first-time Supabase Auth invite link. The ambassador follows it to
- * /ambassador/setup, where they set a password and submit their details. The
- * action link is returned only to the backend email service; it is never
- * logged or sent to an untrusted client.
+ * Create a first-time Supabase Auth invite. The backend receives a one-time
+ * token hash and emails a direct `${APP_URL}/ambassador/setup?invite_token=...`
+ * link. The token is sent only in the email, is never logged, and is never
+ * returned to an untrusted client.
  */
 export async function generateAmbassadorInviteLink(email) {
   const recipient = normalizeEmail(email);
@@ -37,13 +37,18 @@ export async function generateAmbassadorInviteLink(email) {
     throw new Error('Could not generate an invitation link. Please try again.');
   }
 
-  const actionLink = data?.properties?.action_link;
+  const tokenHash = data?.properties?.hashed_token;
   const userId = data?.user?.id || null;
 
-  if (!actionLink) {
-    logger.error('Supabase invite response did not include an action link', { recipient });
+  if (!tokenHash) {
+    logger.error('Supabase invite response did not include a one-time token', { recipient });
     throw new Error('Could not generate an invitation link. Please try again.');
   }
+
+  // Use the app-domain link instead of Supabase's /auth/v1/verify redirect.
+  // That redirect is dropped to the Supabase Site URL when the target is not
+  // in the project's allow-list, which strands ambassadors on the home page.
+  const actionLink = `${config.appUrl}/ambassador/setup?invite_token=${encodeURIComponent(tokenHash)}`;
 
   return { actionLink, userId };
 }

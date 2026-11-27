@@ -7,6 +7,7 @@ import {
   deleteAmbassadorAccount,
   inviteAmbassadorByEmail,
 } from '../services/ambassadorInvites.js';
+import { requestAmbassadorPasswordReset } from '../services/ambassadorPasswordResets.js';
 
 const router = express.Router();
 
@@ -24,6 +25,38 @@ export const deleteLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many account changes. Please wait a few minutes and try again.' },
+});
+
+export const passwordResetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many password reset requests. Please wait a few minutes and try again.' },
+});
+
+// Public, enumeration-safe password reset. The backend always answers the same
+// way and sends a one-time app-domain link only when a real account exists.
+router.post('/reset-password', passwordResetLimiter, async (req, res) => {
+  const email = normalizeEmail(req.body?.email);
+
+  if (!isValidEmail(email)) {
+    return res.status(400).json({ error: 'Enter a valid email address.' });
+  }
+
+  try {
+    await requestAmbassadorPasswordReset({ email });
+    return res.status(200).json({
+      success: true,
+      message: 'If that ambassador account exists, a password reset link has been sent.',
+    });
+  } catch (error) {
+    logger.warn('Ambassador password reset failed', {
+      error: error?.message,
+      recipient: email,
+    });
+    return res.status(502).json({ error: error?.message || 'Could not send the password reset email.' });
+  }
 });
 
 // Admin-only invitation. The admin supplies the email explicitly; the backend

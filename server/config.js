@@ -12,7 +12,23 @@ const ENCRYPTION_KEY_BYTES = 32;
 
 export const DEFAULT_GRAPH_SCOPE = 'https://graph.microsoft.com/Mail.Send offline_access';
 
-const appUrl = (process.env.APP_URL || 'http://localhost:5173').replace(/\/+$/, '');
+function resolveAppUrl() {
+  const explicit = String(process.env.APP_URL || '').trim().replace(/\/+$/, '');
+  if (explicit) return explicit;
+
+  // Vercel exposes the shortest production custom domain. Derive the public
+  // origin from it so invite/reset redirects keep working when APP_URL is not
+  // set explicitly. Local development falls back to the Vite dev server.
+  const productionDomain = String(process.env.VERCEL_PROJECT_PRODUCTION_URL || '').trim();
+  if (productionDomain) return `https://${productionDomain.replace(/^https?:\/\//, '')}`;
+
+  const deploymentDomain = String(process.env.VERCEL_URL || '').trim();
+  if (deploymentDomain) return `https://${deploymentDomain.replace(/^https?:\/\//, '')}`;
+
+  return 'http://localhost:5173';
+}
+
+const appUrl = resolveAppUrl();
 const emailProvider = (process.env.EMAIL_PROVIDER || 'mock').toLowerCase();
 
 export const config = {

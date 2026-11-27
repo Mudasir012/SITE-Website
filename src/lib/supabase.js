@@ -123,6 +123,34 @@ export const ambassadorService = {
     return user || null;
   },
 
+  async verifyInviteToken(tokenHash) {
+    if (!supabase) {
+      throw new Error('The ambassador portal is temporarily unavailable.');
+    }
+
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash: String(tokenHash || ''),
+      type: 'invite',
+    });
+
+    if (error) throw error;
+    return data?.user || null;
+  },
+
+  async verifyResetToken(tokenHash) {
+    if (!supabase) {
+      throw new Error('The ambassador portal is temporarily unavailable.');
+    }
+
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash: String(tokenHash || ''),
+      type: 'recovery',
+    });
+
+    if (error) throw error;
+    return data?.user || null;
+  },
+
   async signIn(email, password) {
     if (!supabase) throw new Error('The ambassador portal is temporarily unavailable.');
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -134,11 +162,14 @@ export const ambassadorService = {
   },
 
   async requestPasswordReset(email) {
-    if (!supabase) throw new Error('The ambassador portal is temporarily unavailable.');
-    const { error } = await supabase.auth.resetPasswordForEmail(String(email || '').trim(), {
-      redirectTo: `${window.location.origin}/ambassador/setup?reset=1`,
+    if (!supabase) {
+      throw new Error('The ambassador portal is temporarily unavailable.');
+    }
+
+    await apiFetch('/api/ambassadors/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email: String(email || '').trim() }),
     });
-    if (error) throw error;
     return true;
   },
 

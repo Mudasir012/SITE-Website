@@ -245,7 +245,11 @@ were **not** executed as part of the code change:
 
 - Keep the Express backend on HTTPS and run it under a least-privileged identity.
 - Set `APP_URL` to the public site origin and `VITE_API_BASE_URL` only if the
-  backend is not served behind the same domain/reverse proxy.
+  backend is not served behind the same domain/reverse proxy. On Vercel, an empty
+  `APP_URL` is resolved from `VERCEL_PROJECT_PRODUCTION_URL`.
+- Ambassador invitations and password-reset emails use direct
+  `/ambassador/setup?invite_token=...` and `?reset_token=...` links. They do
+  not rely on the Supabase redirect allow-list.
 - Keep `SUPABASE_SERVICE_ROLE_KEY`, `MS_GRAPH_TOKEN_ENCRYPTION_KEY`, and all
   Graph token state on the backend only.
 - Monitor `email_deliveries`, `requiresReauth` in `/api/email/status`, and

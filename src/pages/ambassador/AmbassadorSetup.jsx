@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, LockKeyhole } from 'lucide-react';
 import { ambassadorService } from '../../lib/supabase.js';
 import { AuthAlert, AuthShell, Field } from './AmbassadorAuthShell.jsx';
@@ -12,10 +12,47 @@ const iconInputClass =
   'w-full bg-white border border-slate-300 rounded-xl py-2.5 pl-10 pr-3.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 transition-all shadow-sm';
 
 function isRecoveryLink() {
+  const params = new URLSearchParams(window.location.search);
   return (
-    new URLSearchParams(window.location.search).get('reset') === '1' ||
+    params.get('reset') === '1' ||
+    Boolean(params.get('reset_token')) ||
     window.location.hash.includes('type=recovery')
   );
+}
+
+function getEmailToken(name) {
+  const token = new URLSearchParams(window.location.search).get(name);
+  return token && token.trim() ? token.trim() : '';
+}
+
+function getInviteToken() {
+  return getEmailToken('invite_token');
+}
+
+function getResetToken() {
+  return getEmailToken('reset_token');
+}
+
+function clearEmailTokenFromUrl(name) {
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has(name)) return;
+
+  url.searchParams.delete(name);
+  window.history.replaceState(
+    window.history.state,
+    '',
+    `${url.pathname}${url.search}${url.hash}`
+  );
+}
+
+function friendlyEmailLinkError(error, { isReset }) {
+  const message = error?.message || '';
+  if (/expired|invalid|used|already/i.test(message)) {
+    return isReset
+      ? 'This password reset link is invalid, expired, or was already used. Request a fresh one from the ambassador sign-in page.'
+      : 'This invitation link is invalid, expired, or was already used. Ask the CITE admin to send a new invitation.';
+  }
+  return message || 'Could not open your link. Please try again or request a new one.';
 }
 
 function PublicSiteAction({ onBackToSite }) {
@@ -47,6 +84,7 @@ export default function AmbassadorSetup({ onBackToSite, onComplete, onGoToPortal
   const [isReset] = useState(isRecoveryLink);
   const [hasSession, setHasSession] = useState(false);
   const [alreadyCreated, setAlreadyCreated] = useState(false);
+  const [emailLinkError, setEmailLinkError] = useState('');
   const [email, setEmail] = useState('');
   const [form, setForm] = useState({
     fullName: '',
@@ -58,13 +96,55 @@ export default function AmbassadorSetup({ onBackToSite, onComplete, onGoToPortal
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const emailLinkVerification = useRef(null);
 
   useEffect(() => {
     let active = true;
+    const inviteToken = getInviteToken();
+    const resetToken = getResetToken();
+    const emailToken = inviteToken || resetToken;
+    const emailTokenType = inviteToken ? 'invite' : 'recovery';
+    const emailTokenParam = inviteToken ? 'invite_token' : 'reset_token';
 
     async function checkInvite() {
       try {
-        const user = await ambassadorService.getCurrentUser();
+        let user = null;
+
+        if (emailToken) {
+          // Supabase email tokens are one-time. Share the verification promise
+          // so a double-invoked effect cannot consume the token twice.
+          if (!emailLinkVerification.current) {
+            emailLinkVerification.current =
+              emailTokenType === 'invite'
+                ? ambassadorService.verifyInviteToken(emailToken)
+                : ambassadorService.verifyResetToken(emailToken);
+          }
+
+          try {
+            user = await emailLinkVerification.current;
+          } catch (err) {
+            if (active) {
+              setEmailLinkError(friendlyEmailLinkError(err, { isReset: emailTokenType === 'recovery' }));
+            }
+            return;
+          }
+
+          if (!user) {
+            if (active) {
+              setEmailLinkError(
+                emailTokenType === 'invite'
+                  ? 'This invitation link is invalid. Ask the CITE admin to send a new one.'
+                  : 'This password reset link is invalid. Request a fresh one from the ambassador sign-in page.'
+              );
+            }
+            return;
+          }
+
+          clearEmailTokenFromUrl(emailTokenParam);
+        } else {
+          user = await ambassadorService.getCurrentUser();
+        }
+
         if (!active) return;
         if (!user) {
           setHasSession(false);
@@ -171,6 +251,39 @@ export default function AmbassadorSetup({ onBackToSite, onComplete, onGoToPortal
           </span>
         </div>
       </div>
+    );
+  }
+
+  if (emailLinkError) {
+    return (
+      <AuthShell
+        title={isReset ? 'Password Reset Link Problem' : 'Invitation Link Problem'}
+        action={<PublicSiteAction onBackToSite={onBackToSite} />}
+      >
+        <AuthAlert>{emailLinkError}</AuthAlert>
+        <p className="text-xs leading-relaxed text-slate-500">
+          {isReset
+            ? 'Password reset links are single-use and expire for security. Request a fresh one from the ambassador sign-in page.'
+            : 'Invitation links are single-use and expire for security. The CITE admin can send you a fresh invitation from the ambassador list.'}
+        </p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={onGoToPortal}
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-colors"
+          >
+            Go to sign in
+            <ArrowRight className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={onBackToSite}
+            className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-600 transition-colors"
+          >
+            Public site
+          </button>
+        </div>
+      </AuthShell>
     );
   }
 
