@@ -5,12 +5,14 @@ import {
   CheckCircle2,
   Copy,
   ExternalLink,
+  Loader2,
   LogOut,
   RefreshCw,
   Search,
   ShieldCheck,
   Trophy,
   Users,
+  XCircle,
 } from 'lucide-react';
 import { events } from '../../data/tracks.js';
 import { ambassadorService } from '../../lib/supabase.js';
@@ -53,6 +55,9 @@ export default function AmbassadorDashboard({ profile, onLogout, onBackToSite })
   const [statusFilter, setStatusFilter] = useState('all');
   const [copied, setCopied] = useState('');
   const [eventSlug, setEventSlug] = useState(events[0]?.slug || '');
+  const [busyId, setBusyId] = useState('');
+  const [notice, setNotice] = useState('');
+  const [actionError, setActionError] = useState('');
 
   const loadReferrals = async () => {
     try {
@@ -91,6 +96,47 @@ export default function AmbassadorDashboard({ profile, onLogout, onBackToSite })
     }
   };
 
+  const handleReview = async (row, decision) => {
+    if (busyId) return;
+
+    setBusyId(row.id);
+    setNotice('');
+    setActionError('');
+
+    try {
+      const result = await ambassadorService.reviewReferral(row.id, decision);
+      const finalStatus = result?.status || decision;
+
+      setReferrals((prev) =>
+        prev.map((item) =>
+          item.id === row.id
+            ? {
+                ...item,
+                status: finalStatus,
+                ambassador_reviewed_at: result?.ambassador_reviewed_at || new Date().toISOString(),
+              }
+            : item
+        )
+      );
+
+      if (finalStatus === 'waitlisted') {
+        setNotice(
+          `${row.full_name} was approved, but the event is full so they were moved to the waitlist.`
+        );
+      } else if (finalStatus === 'approved') {
+        setNotice(`${row.full_name} is approved and now counted as a participant.`);
+      } else {
+        setNotice(`${row.full_name} was rejected.`);
+      }
+    } catch (err) {
+      setActionError(err.message || 'Could not save your review. Please try again.');
+    } finally {
+      setBusyId('');
+    }
+  };
+
+  const pendingCount = referrals.filter((row) => row.status === 'pending').length;
+
   const basePath = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '');
   const selectedEvent = events.find((item) => item.slug === eventSlug) || events[0];
   const eventLink = selectedEvent
@@ -107,15 +153,15 @@ export default function AmbassadorDashboard({ profile, onLogout, onBackToSite })
     },
     {
       label: 'Approved',
-      value: profile.approved_referrals ?? 0,
-      note: 'Seats confirmed',
+      value: referrals.length > 0 ? referrals.filter((r) => r.status === 'approved').length : profile.approved_referrals ?? 0,
+      note: 'Confirmed participants',
       icon: CheckCircle2,
       accent: 'text-emerald-600',
     },
     {
       label: 'Pending review',
-      value: profile.pending_referrals ?? 0,
-      note: 'Awaiting verification',
+      value: referrals.length > 0 ? referrals.filter((r) => r.status === 'pending').length : profile.pending_referrals ?? 0,
+      note: 'Waiting for your decision',
       icon: RefreshCw,
       accent: 'text-amber-600',
     },
@@ -306,7 +352,8 @@ export default function AmbassadorDashboard({ profile, onLogout, onBackToSite })
                   Referred participants
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  Registrations that selected you as their campus ambassador.
+                  Registrations that selected you as their campus ambassador. Approve a referral to
+                  confirm them as a participant, or reject it to decline.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
@@ -352,8 +399,30 @@ export default function AmbassadorDashboard({ profile, onLogout, onBackToSite })
               </div>
             )}
 
+            {notice && (
+              <div className="mt-5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs leading-relaxed">
+                {notice}
+              </div>
+            )}
+
+            {actionError && (
+              <div className="mt-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs leading-relaxed">
+                {actionError}
+              </div>
+            )}
+
+            {pendingCount > 0 && (
+              <div className="mt-5 flex items-start gap-2 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs leading-relaxed">
+                <RefreshCw className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span>
+                  <strong>{pendingCount}</strong> referral{pendingCount === 1 ? '' : 's'} waiting
+                  for your review.
+                </span>
+              </div>
+            )}
+
             <div className="mt-5 overflow-x-auto">
-              <table className="w-full min-w-[900px] text-left text-xs">
+              <table className="w-full min-w-[1020px] text-left text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider">
                     <th className="py-2.5 px-3">Participant</th>
@@ -362,19 +431,20 @@ export default function AmbassadorDashboard({ profile, onLogout, onBackToSite })
                     <th className="py-2.5 px-3">Event</th>
                     <th className="py-2.5 px-3">Status</th>
                     <th className="py-2.5 px-3">Registered</th>
+                    <th className="py-2.5 px-3 text-right">Review</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {loading ? (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-slate-400">
+                      <td colSpan={7} className="py-12 text-center text-slate-400">
                         <RefreshCw className="mx-auto mb-2 h-4 w-4 animate-spin" />
                         Loading referrals…
                       </td>
                     </tr>
                   ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-slate-400">
+                      <td colSpan={7} className="py-12 text-center text-slate-400">
                         {referrals.length === 0
                           ? 'No referrals yet. Share an event page to get started.'
                           : 'No referrals match this search.'}
@@ -409,6 +479,40 @@ export default function AmbassadorDashboard({ profile, onLogout, onBackToSite })
                         </td>
                         <td className="py-3 px-3 font-mono text-[11px] text-slate-500 whitespace-nowrap">
                           {formatDate(row.created_at)}
+                        </td>
+                        <td className="py-3 px-3 text-right">
+                          {row.status === 'pending' ? (
+                            <div className="inline-flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleReview(row, 'approved')}
+                                disabled={Boolean(busyId)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                                title={`Approve ${row.full_name}`}
+                              >
+                                {busyId === row.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                                ) : (
+                                  <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                                )}
+                                Approve
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleReview(row, 'rejected')}
+                                disabled={Boolean(busyId)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[10px] font-bold uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                                title={`Reject ${row.full_name}`}
+                              >
+                                <XCircle className="h-3 w-3" aria-hidden="true" />
+                                Reject
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] font-semibold text-slate-400">
+                              {row.ambassador_reviewed_at ? 'Reviewed by you' : 'Admin reviewed'}
+                            </span>
+                          )}
                         </td>
                       </tr>
                     ))

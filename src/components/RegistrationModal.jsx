@@ -294,9 +294,19 @@ export default function RegistrationModal({ open, event, onClose }) {
                 </h2>
                 <p className="mx-auto mt-2 max-w-sm text-center font-display text-sm leading-relaxed text-arcade-mute">
                   You are on the list for{' '}
-                  <strong className="text-arcade-bone">{event.name}</strong>. The CITE committee will
-                  review your entry and contact you at{' '}
-                  <span className="text-arcade-bone">{form.email.trim()}</span>.
+                  <strong className="text-arcade-bone">{event.name}</strong>.{' '}
+                  {selectedAmbassador ? (
+                    <>
+                      <strong className="text-arcade-bone">{selectedAmbassador.full_name}</strong>{' '}
+                      will review your entry and confirm your seat. We will contact you at{' '}
+                      <span className="text-arcade-bone">{form.email.trim()}</span>.
+                    </>
+                  ) : (
+                    <>
+                      The CITE committee will review your entry and contact you at{' '}
+                      <span className="text-arcade-bone">{form.email.trim()}</span>.
+                    </>
+                  )}
                 </p>
 
                 <dl className="mt-6 divide-y divide-white/10 border-y border-white/10">

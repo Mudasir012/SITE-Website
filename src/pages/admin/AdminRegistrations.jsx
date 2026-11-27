@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   UserCheck,
+  Award,
   X
 } from 'lucide-react';
 import { adminService } from '../../lib/supabase';
@@ -20,6 +21,7 @@ import ConfirmationModal from './ConfirmationModal';
 export default function AdminRegistrations({ initialFilterStatus = 'all' }) {
   const [registrations, setRegistrations] = useState([]);
   const [events, setEvents] = useState([]);
+  const [ambassadors, setAmbassadors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState(initialFilterStatus);
@@ -46,7 +48,7 @@ export default function AdminRegistrations({ initialFilterStatus = 'all' }) {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [regData, eventList] = await Promise.all([
+      const [regData, eventList, ambassadorList] = await Promise.all([
         adminService.getRegistrations({
           search,
           status: statusFilter,
@@ -57,12 +59,14 @@ export default function AdminRegistrations({ initialFilterStatus = 'all' }) {
           sortOrder,
         }),
         adminService.getEvents(),
+        adminService.getAmbassadors(),
       ]);
 
       setRegistrations(regData.items);
       setTotalPages(regData.totalPages);
       setTotalCount(regData.total);
       setEvents(eventList);
+      setAmbassadors(ambassadorList);
       setSelectedIds([]);
     } catch (err) {
       console.error('Error fetching registrations from Supabase:', err);
@@ -149,6 +153,12 @@ export default function AdminRegistrations({ initialFilterStatus = 'all' }) {
     if (!reg) return 'Track Event';
     const ev = events.find(e => e.id === reg.event_id);
     return ev ? ev.title : (reg.event_name || 'Track Event');
+  };
+
+  const getReviewerName = (reg) => {
+    if (!reg?.ambassador_reviewed_by) return '';
+    const amb = ambassadors.find(a => a.id === reg.ambassador_reviewed_by);
+    return amb?.full_name || amb?.referral_code || '';
   };
 
   const getStatusBadge = (status) => {
@@ -392,7 +402,17 @@ export default function AdminRegistrations({ initialFilterStatus = 'all' }) {
                         </div>
                       </td>
                       <td className="py-3.5 px-4">
-                        {getStatusBadge(reg.status)}
+                        <div className="space-y-1">
+                          {getStatusBadge(reg.status)}
+                          {reg.ambassador_reviewed_by && (
+                            <div className="flex items-center gap-1 text-[10px] font-semibold text-slate-400">
+                              <Award className="h-3 w-3 shrink-0" aria-hidden="true" />
+                              <span className="truncate max-w-[140px]">
+                                Ambassador{getReviewerName(reg) ? `: ${getReviewerName(reg)}` : ''}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         <div className="inline-flex items-center gap-1">
@@ -537,6 +557,16 @@ export default function AdminRegistrations({ initialFilterStatus = 'all' }) {
                 <div>
                   <span className="text-slate-400 block font-bold uppercase text-[10px] mb-0.5">Referral Code</span>
                   <span className="text-slate-900 font-mono font-medium">{activeParticipant.referral_code || 'None'}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block font-bold uppercase text-[10px] mb-0.5">Reviewed By</span>
+                  <span className="text-slate-900 font-medium">
+                    {activeParticipant.ambassador_reviewed_by
+                      ? `Ambassador${getReviewerName(activeParticipant) ? ` · ${getReviewerName(activeParticipant)}` : ''}`
+                      : activeParticipant.status === 'pending'
+                        ? 'Pending review'
+                        : 'Admin committee'}
+                  </span>
                 </div>
               </div>
 

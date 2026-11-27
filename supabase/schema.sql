@@ -567,6 +567,21 @@ $$;
 REVOKE ALL ON FUNCTION public.get_ambassador_dashboard() FROM public;
 GRANT EXECUTE ON FUNCTION public.get_ambassador_dashboard() TO authenticated;
 
+-- Ambassador decisions on referred registrations. A registration that names an
+-- approved ambassador starts as pending in that ambassador's portal; the
+-- ambassador can approve (participant) or reject it.
+ALTER TABLE public.registrations
+  ADD COLUMN IF NOT EXISTS ambassador_reviewed_by UUID
+    REFERENCES public.ambassadors(id) ON DELETE SET NULL;
+ALTER TABLE public.registrations
+  ADD COLUMN IF NOT EXISTS ambassador_reviewed_at TIMESTAMPTZ;
+
+CREATE INDEX IF NOT EXISTS idx_reg_amb_review
+  ON public.registrations(ambassador_reviewed_by)
+  WHERE ambassador_reviewed_by IS NOT NULL AND deleted_at IS NULL;
+
+DROP FUNCTION IF EXISTS public.get_ambassador_referrals();
+
 CREATE OR REPLACE FUNCTION public.get_ambassador_referrals()
 RETURNS TABLE (
   id UUID,
@@ -577,7 +592,8 @@ RETURNS TABLE (
   event_name TEXT,
   event_slug TEXT,
   status TEXT,
-  created_at TIMESTAMPTZ
+  created_at TIMESTAMPTZ,
+  ambassador_reviewed_at TIMESTAMPTZ
 )
 LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public AS $$
 DECLARE
@@ -608,7 +624,8 @@ BEGIN
     coalesce(nullif(r.event_name, ''), e.title, r.event_slug, 'CITE 2026 Event') AS event_name,
     r.event_slug,
     r.status,
-    r.created_at
+    r.created_at,
+    r.ambassador_reviewed_at
   FROM public.registrations r
   LEFT JOIN public.events e ON e.id = r.event_id
   WHERE r.deleted_at IS NULL
@@ -620,6 +637,84 @@ $$;
 
 REVOKE ALL ON FUNCTION public.get_ambassador_referrals() FROM public;
 GRANT EXECUTE ON FUNCTION public.get_ambassador_referrals() TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.ambassador_review_referral(
+  p_registration_id UUID,
+  p_decision TEXT
+)
+RETURNS TABLE (id UUID, status TEXT, ambassador_reviewed_at TIMESTAMPTZ)
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_amb public.ambassadors%rowtype;
+  v_reg public.registrations%rowtype;
+  v_decision TEXT := lower(btrim(coalesce(p_decision, '')));
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Sign in to review referrals.' USING ERRCODE = '42501';
+  END IF;
+
+  IF v_decision NOT IN ('approved', 'rejected') THEN
+    RAISE EXCEPTION 'Review decision must be approved or rejected.' USING ERRCODE = '22023';
+  END IF;
+
+  SELECT a.* INTO v_amb
+  FROM public.ambassadors a
+  WHERE a.user_id = auth.uid()
+    AND a.status = 'approved'
+    AND a.deleted_at IS NULL
+  LIMIT 1;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'No approved ambassador profile is linked to this account.' USING ERRCODE = '42501';
+  END IF;
+
+  SELECT r.* INTO v_reg
+  FROM public.registrations r
+  WHERE r.id = p_registration_id
+    AND r.deleted_at IS NULL
+    AND upper(r.referral_code) = upper(v_amb.referral_code)
+  LIMIT 1;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'That registration is not linked to your referral code.' USING ERRCODE = '42501';
+  END IF;
+
+  IF v_reg.status <> 'pending' THEN
+    RAISE EXCEPTION 'This referral has already been reviewed.' USING ERRCODE = '22023';
+  END IF;
+
+  UPDATE public.registrations r
+  SET status = v_decision,
+      ambassador_reviewed_by = v_amb.id,
+      ambassador_reviewed_at = NOW(),
+      updated_at = NOW()
+  WHERE r.id = v_reg.id;
+
+  INSERT INTO public.audit_logs (actor_email, action, entity_type, entity_id, details)
+  VALUES (
+    v_amb.email,
+    'AMBASSADOR_REVIEW_REFERRAL',
+    'registration',
+    v_reg.id::text,
+    jsonb_build_object(
+      'decision', v_decision,
+      'participant', v_reg.full_name,
+      'participant_email', v_reg.user_email,
+      'event', coalesce(v_reg.event_name, v_reg.event_slug),
+      'ambassador', v_amb.full_name,
+      'ambassador_code', v_amb.referral_code
+    )
+  );
+
+  RETURN QUERY
+  SELECT r.id, r.status, r.ambassador_reviewed_at
+  FROM public.registrations r
+  WHERE r.id = v_reg.id;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.ambassador_review_referral(UUID, TEXT) FROM public;
+GRANT EXECUTE ON FUNCTION public.ambassador_review_referral(UUID, TEXT) TO authenticated;
 
 -- Ambassador account creation from an admin email invitation.
 CREATE OR REPLACE FUNCTION public.complete_ambassador_setup(

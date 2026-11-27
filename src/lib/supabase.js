@@ -217,6 +217,20 @@ export const ambassadorService = {
     return data || [];
   },
 
+  async reviewReferral(registrationId, decision) {
+    if (!supabase) throw new Error('The ambassador portal is temporarily unavailable.');
+    if (!['approved', 'rejected'].includes(decision)) {
+      throw new Error('Review decision must be approved or rejected.');
+    }
+
+    const { data, error } = await supabase.rpc('ambassador_review_referral', {
+      p_registration_id: registrationId,
+      p_decision: decision,
+    });
+    if (error) throw error;
+    return Array.isArray(data) ? data[0] : data;
+  },
+
   async logout() {
     if (!supabase) return;
     await supabase.auth.signOut();

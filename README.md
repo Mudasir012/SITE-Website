@@ -39,7 +39,12 @@ Run these files once in the Supabase SQL Editor, in this order:
 5. `supabase/ambassador-accounts.sql` — adds CNIC/signup fields, the
    `complete_ambassador_setup()` and `get_ambassador_account()` RPCs, and the
    `invited` status used by the invitation flow.
-6. `supabase/microsoft-graph-token-store.sql` — adds the backend-only encrypted
+6. `supabase/ambassador-referral-review.sql` — adds ambassador review of
+   referred registrations: `ambassador_review_referral(...)` lets the
+   ambassador who owns the referral code approve (participant) or reject a
+   pending registration, and `get_ambassador_referrals()` returns the review
+   timestamp.
+7. `supabase/microsoft-graph-token-store.sql` — adds the backend-only encrypted
    refresh-token row used by the delegated Microsoft Graph mail provider.
 
 The anon key still cannot read or write the registration tables directly. Fresh
@@ -62,6 +67,17 @@ The ambassador portal lives at `/ambassador`. The flow is:
    password. **Forgot password?** asks the backend to email a one-time
    `/ambassador/setup?reset_token=...` link, which also goes directly to the
    site and does not depend on Supabase's redirect URL allow-list.
+
+### Referral review
+
+When a participant registers and picks a campus ambassador, the registration is
+created as `pending` and appears in that ambassador's **Referred participants**
+table. The ambassador can **Approve** it (it becomes an approved participant and
+shows up in the admin roster) or **Reject** it. Each decision stamps
+`ambassador_reviewed_by` / `ambassador_reviewed_at` on the registration and is
+written to `audit_logs`. Admin approvals and rejections still work; only
+registrations that are still `pending` can be reviewed by the ambassador, so an
+admin decision is never overwritten from the portal.
 
 In production, set `APP_URL=https://your-domain` in the backend environment.
 When `APP_URL` is empty on Vercel, the backend derives the public origin from
