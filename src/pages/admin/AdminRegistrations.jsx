@@ -16,12 +16,13 @@ import {
   X
 } from 'lucide-react';
 import { adminService } from '../../lib/supabase';
+import { mergeTracks } from '../../lib/tracks';
 import ConfirmationModal from './ConfirmationModal';
 
 export default function AdminRegistrations({ initialFilterStatus = 'all' }) {
   const [registrations, setRegistrations] = useState([]);
-  const [events, setEvents] = useState([]);
   const [ambassadors, setAmbassadors] = useState([]);
+  const [tracks, setTracks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState(initialFilterStatus);
@@ -48,24 +49,24 @@ export default function AdminRegistrations({ initialFilterStatus = 'all' }) {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [regData, eventList, ambassadorList] = await Promise.all([
+      const [regData, trackRows, ambassadorList] = await Promise.all([
         adminService.getRegistrations({
           search,
           status: statusFilter,
-          eventId: eventFilter,
+          eventSlug: eventFilter,
           page,
           limit,
           sortBy,
           sortOrder,
         }),
-        adminService.getEvents(),
+        adminService.getTrackOverrides(),
         adminService.getAmbassadors(),
       ]);
 
       setRegistrations(regData.items);
       setTotalPages(regData.totalPages);
       setTotalCount(regData.total);
-      setEvents(eventList);
+      setTracks(mergeTracks(trackRows));
       setAmbassadors(ambassadorList);
       setSelectedIds([]);
     } catch (err) {
@@ -151,8 +152,8 @@ export default function AdminRegistrations({ initialFilterStatus = 'all' }) {
 
   const getEventTitle = (reg) => {
     if (!reg) return 'Track Event';
-    const ev = events.find(e => e.id === reg.event_id);
-    return ev ? ev.title : (reg.event_name || 'Track Event');
+    const track = tracks.find(t => t.slug === reg.event_slug);
+    return track ? track.name : (reg.event_name || reg.event_slug || 'Track Event');
   };
 
   const getReviewerName = (reg) => {
@@ -261,8 +262,8 @@ export default function AdminRegistrations({ initialFilterStatus = 'all' }) {
               className="w-full bg-white border border-slate-200 rounded-xl py-2 px-3 text-xs text-slate-700 focus:outline-none focus:border-slate-900 shadow-sm font-medium"
             >
               <option value="all">All Events & Competitions</option>
-              {events.map(ev => (
-                <option key={ev.id} value={ev.id}>{ev.title}</option>
+              {tracks.map((track) => (
+                <option key={track.slug} value={track.slug}>{track.name}</option>
               ))}
             </select>
           </div>

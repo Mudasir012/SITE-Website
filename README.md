@@ -19,9 +19,9 @@ The event detail page opens an on-site registration form (name, email, CNIC,
 phone, and an optional campus ambassador). Registrations are written to Supabase
 and appear in the admin portal under **Registrations**. Public registration is
 **closed by default** and is switched on by an admin in
-**Admin Portal → Events & Tracks → Public Registration**. Until then, event pages
-show a disabled “Registration not open” button and the database rejects
-submissions.
+**Admin Portal → Event Page Tracks → Public Registration (Site-Wide)**. Until
+then, event pages show a disabled “Registration not open” button and the database
+rejects submissions.
 
 Run these files once in the Supabase SQL Editor, in this order:
 
@@ -112,6 +112,9 @@ capacity gauge, and lets an admin edit the public page directly:
 - fee, prize pool, winner and runner-up prizes, timings, duration, format,
   eligibility
 - an independent **registration open/closed** switch per track
+- **Open All Tracks / Close All Tracks** — one button that flips every track at once
+- the **site-wide Public Registration master switch** (moved here when the old
+  Events & Limits tab was retired)
 
 Only edited fields are stored in `public.event_tracks`; `src/lib/tracks.js`
 merges each row over the shipped defaults, so clearing a field or using **Reset

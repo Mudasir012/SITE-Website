@@ -18,11 +18,9 @@ import ConfirmationModal from './ConfirmationModal';
 
 export default function AdminTeams() {
   const [teams, setTeams] = useState([]);
-  const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [eventFilter, setEventFilter] = useState('all');
 
   const [activeTeam, setActiveTeam] = useState(null);
 
@@ -37,16 +35,11 @@ export default function AdminTeams() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [teamList, eventList] = await Promise.all([
-        adminService.getTeams({
-          search,
-          status: statusFilter,
-          eventId: eventFilter,
-        }),
-        adminService.getEvents(),
-      ]);
+      const teamList = await adminService.getTeams({
+        search,
+        status: statusFilter,
+      });
       setTeams(teamList);
-      setEvents(eventList);
 
       if (activeTeam) {
         const refreshed = teamList.find(t => t.id === activeTeam.id);
@@ -61,7 +54,7 @@ export default function AdminTeams() {
 
   useEffect(() => {
     loadData();
-  }, [search, statusFilter, eventFilter]);
+  }, [search, statusFilter]);
 
   const handleUpdateStatus = (teamId, status, teamName) => {
     const isDisqualify = status === 'disqualified';
@@ -187,18 +180,6 @@ export default function AdminTeams() {
             </select>
           </div>
 
-          <div>
-            <select
-              value={eventFilter}
-              onChange={(e) => setEventFilter(e.target.value)}
-              className="w-full bg-white border border-slate-200 rounded-xl py-2 px-3 text-xs text-slate-700 focus:outline-none focus:border-slate-900 shadow-sm font-medium"
-            >
-              <option value="all">All Events</option>
-              {events.map(ev => (
-                <option key={ev.id} value={ev.id}>{ev.title}</option>
-              ))}
-            </select>
-          </div>
         </div>
       </div>
 

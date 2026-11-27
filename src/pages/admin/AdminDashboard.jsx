@@ -251,10 +251,10 @@ export default function AdminDashboard({ onNavigateTab }) {
           <div className="pt-4 mt-2 border-t border-slate-100 flex justify-between items-center text-xs">
             <span className="text-slate-500 font-medium">Ambassador Referrals: {counts.totalReferrals}</span>
             <button
-              onClick={() => onNavigateTab('events')}
+              onClick={() => onNavigateTab('tracks')}
               className="text-slate-900 hover:text-slate-700 font-bold"
             >
-              Configure Limits →
+              Configure Tracks →
             </button>
           </div>
         </div>

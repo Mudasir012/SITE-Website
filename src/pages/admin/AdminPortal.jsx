@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   Users,
   Shield,
-  Calendar,
   Mail,
   Award,
   Layers,
@@ -18,7 +17,6 @@ import AdminAuth from './AdminAuth';
 import AdminDashboard from './AdminDashboard';
 import AdminRegistrations from './AdminRegistrations';
 import AdminTeams from './AdminTeams';
-import AdminEvents from './AdminEvents';
 import AdminCommunication from './AdminCommunication';
 import AdminAmbassadors from './AdminAmbassadors';
 import AdminTracks from './AdminTracks';
@@ -113,7 +111,6 @@ export default function AdminPortal({ onBackToSite }) {
     { id: 'dashboard', label: 'Executive Dashboard', icon: LayoutDashboard },
     { id: 'registrations', label: 'Registrations', icon: Users },
     { id: 'teams', label: 'Teams Management', icon: Shield },
-    { id: 'events', label: 'Events & Limits', icon: Calendar },
     { id: 'tracks', label: 'Event Page Tracks', icon: Layers },
     { id: 'communication', label: 'Communication Hub', icon: Mail },
     { id: 'ambassadors', label: 'Campus Ambassadors', icon: Award },
@@ -243,7 +240,6 @@ export default function AdminPortal({ onBackToSite }) {
               <AdminRegistrations initialFilterStatus={tabParams.status || 'all'} />
             )}
             {currentTab === 'teams' && <AdminTeams />}
-            {currentTab === 'events' && <AdminEvents />}
             {currentTab === 'tracks' && <AdminTracks />}
             {currentTab === 'communication' && <AdminCommunication />}
             {currentTab === 'ambassadors' && <AdminAmbassadors />}

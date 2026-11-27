@@ -11,17 +11,18 @@ import {
 } from 'lucide-react';
 import { adminService } from '../../lib/supabase';
 import { getEmailStatus } from '../../lib/email.js';
+import { mergeTracks } from '../../lib/tracks';
 import ConfirmationModal from './ConfirmationModal';
 
 export default function AdminCommunication() {
   const [activeTab, setActiveTab] = useState('announcements');
-  const [events, setEvents] = useState([]);
+  const [tracks, setTracks] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [targetGroup, setTargetGroup] = useState('approved');
-  const [selectedEventId, setSelectedEventId] = useState('all');
+  const [selectedEventSlug, setSelectedEventSlug] = useState('all');
   const [recipientCount, setRecipientCount] = useState(0);
 
   const [testEmail, setTestEmail] = useState('');
@@ -40,11 +41,11 @@ export default function AdminCommunication() {
 
   const loadInitial = async () => {
     try {
-      const [evList, history] = await Promise.all([
-        adminService.getEvents(),
+      const [trackRows, history] = await Promise.all([
+        adminService.getTrackOverrides(),
         adminService.getAnnouncements(),
       ]);
-      setEvents(evList);
+      setTracks(mergeTracks(trackRows));
       setAnnouncements(history);
       updateCount('approved', 'all');
     } catch (err) {
@@ -65,13 +66,13 @@ export default function AdminCommunication() {
   const handleGroupChange = (e) => {
     const grp = e.target.value;
     setTargetGroup(grp);
-    updateCount(grp, selectedEventId);
+    updateCount(grp, selectedEventSlug);
   };
 
   const handleEventChange = (e) => {
-    const evId = e.target.value;
-    setSelectedEventId(evId);
-    updateCount(targetGroup, evId);
+    const slug = e.target.value;
+    setSelectedEventSlug(slug);
+    updateCount(targetGroup, slug);
   };
 
   const handleSendTest = async () => {
@@ -120,7 +121,7 @@ export default function AdminCommunication() {
             subject,
             body,
             targetGroup,
-            eventId: selectedEventId,
+            eventSlug: selectedEventSlug,
             isTest: false,
           });
           setConfirmModal(prev => ({ ...prev, isOpen: false }));
@@ -229,13 +230,13 @@ export default function AdminCommunication() {
                     Select Event
                   </label>
                   <select
-                    value={selectedEventId}
+                    value={selectedEventSlug}
                     onChange={handleEventChange}
                     className="w-full bg-white border border-slate-300 rounded-xl py-2 px-3 text-xs text-slate-800 focus:outline-none focus:border-slate-900 shadow-sm font-medium"
                   >
                     <option value="all">Select an Event</option>
-                    {events.map(e => (
-                      <option key={e.id} value={e.id}>{e.title}</option>
+                    {tracks.map((track) => (
+                      <option key={track.slug} value={track.slug}>{track.name}</option>
                     ))}
                   </select>
                 </div>

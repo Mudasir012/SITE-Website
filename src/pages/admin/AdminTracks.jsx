@@ -97,6 +97,8 @@ export default function AdminTracks() {
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState('');
+  const [siteRegistrationOpen, setSiteRegistrationOpen] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
@@ -110,12 +112,14 @@ export default function AdminTracks() {
     try {
       setLoading(true);
       setError('');
-      const [overrideRows, statRows] = await Promise.all([
+      const [overrideRows, statRows, settingsOpen] = await Promise.all([
         adminService.getTrackOverrides(),
         adminService.getTrackStats().catch(() => []),
+        adminService.getRegistrationOpen().catch(() => false),
       ]);
       setOverrides(overrideRows);
       setStats(statRows);
+      setSiteRegistrationOpen(Boolean(settingsOpen));
     } catch (err) {
       console.error('Error fetching event tracks:', err);
       setError(
@@ -332,6 +336,69 @@ export default function AdminTracks() {
     }
   };
 
+  /**
+   * The single button the admin asked for: open or close every track at once.
+   */
+  const handleBulkToggle = () => {
+    const anyClosed = tracks.some((track) => track.registrationOpen === false);
+    const nextOpen = anyClosed; // if anything is closed, open everything
+    const slugs = tracks.map((track) => track.slug);
+
+    setConfirmModal({
+      isOpen: true,
+      title: nextOpen ? 'Open All Event Tracks' : 'Close All Event Tracks',
+      message: nextOpen
+        ? `Enable the Register button on all ${slugs.length} event pages at once?`
+        : `Disable the Register button on all ${slugs.length} event pages at once? Public visitors will see "Registration not open" on every track.`,
+      confirmText: nextOpen ? 'Open All' : 'Close All',
+      isDestructive: !nextOpen,
+      action: async () => {
+        setBulkBusy(true);
+        try {
+          await adminService.setAllTracksRegistrationOpen(slugs, nextOpen);
+          setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+          setNotice(
+            nextOpen
+              ? `All ${slugs.length} event tracks are now open for registration.`
+              : `All ${slugs.length} event tracks are now closed.`
+          );
+          await loadAll();
+        } catch (err) {
+          setError(err?.message || 'Could not update all tracks.');
+          setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        } finally {
+          setBulkBusy(false);
+        }
+      },
+    });
+  };
+
+  /**
+   * Global master switch, inherited from the retired Events & Limits tab.
+   */
+  const handleToggleSiteRegistration = () => {
+    const next = !siteRegistrationOpen;
+    setConfirmModal({
+      isOpen: true,
+      title: next ? 'Open Public Registration?' : 'Close Public Registration?',
+      message: next
+        ? 'The site-wide registration window opens. Individual tracks that are still closed stay closed.'
+        : 'The site-wide registration window closes and every event page shows "Registration not open", regardless of individual track settings.',
+      confirmText: next ? 'Open Registration' : 'Close Registration',
+      isDestructive: !next,
+      action: async () => {
+        try {
+          await adminService.setRegistrationOpen(next);
+          setSiteRegistrationOpen(next);
+        } catch (err) {
+          setError(err?.message || 'Could not update the global registration window.');
+        } finally {
+          setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        }
+      },
+    });
+  };
+
   const handleReset = (track) => {
     setConfirmModal({
       isOpen: true,
@@ -352,6 +419,7 @@ export default function AdminTracks() {
   };
 
   const editingTrack = tracks.find((track) => track.slug === editingSlug) || null;
+  const openCount = tracks.filter((track) => track.registrationOpen !== false).length;
 
   return (
     <div className="space-y-6">
@@ -377,6 +445,78 @@ export default function AdminTracks() {
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
         </button>
+      </div>
+
+      {/* Global switches, inherited from the retired Events & Limits tab */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div
+          className={`border rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+            siteRegistrationOpen ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            {siteRegistrationOpen ? (
+              <ToggleRight className="w-6 h-6 text-emerald-600 flex-shrink-0 mt-0.5" />
+            ) : (
+              <ToggleLeft className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+            )}
+            <div>
+              <h3
+                className={`text-sm font-bold ${
+                  siteRegistrationOpen ? 'text-emerald-900' : 'text-amber-900'
+                }`}
+              >
+                Public Registration (Site-Wide)
+              </h3>
+              <p
+                className={`text-xs mt-1 ${
+                  siteRegistrationOpen ? 'text-emerald-800' : 'text-amber-800'
+                }`}
+              >
+                {siteRegistrationOpen
+                  ? 'Master switch is open. Tracks you closed individually stay closed.'
+                  : 'Master switch is closed. Every event page blocks registration.'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleToggleSiteRegistration}
+            className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all whitespace-nowrap ${
+              siteRegistrationOpen
+                ? 'bg-white text-rose-700 border-rose-200 hover:bg-rose-50'
+                : 'bg-slate-900 text-white border-slate-900 hover:bg-slate-800'
+            }`}
+          >
+            {siteRegistrationOpen ? 'Close Registration' : 'Open Registration'}
+          </button>
+        </div>
+
+        <div className="border border-slate-200 bg-white rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <Layers className="w-6 h-6 text-slate-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">All Event Tracks</h3>
+              <p className="text-xs mt-1 text-slate-500">
+                {openCount} of {tracks.length} tracks are currently open. One click flips them all.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleBulkToggle}
+            disabled={bulkBusy || loading}
+            className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all whitespace-nowrap disabled:opacity-50 ${
+              openCount === tracks.length
+                ? 'bg-white text-rose-700 border-rose-200 hover:bg-rose-50'
+                : 'bg-slate-900 text-white border-slate-900 hover:bg-slate-800'
+            }`}
+          >
+            {bulkBusy
+              ? 'Updating…'
+              : openCount === tracks.length
+                ? 'Close All Tracks'
+                : 'Open All Tracks'}
+          </button>
+        </div>
       </div>
 
       {/* Totals */}

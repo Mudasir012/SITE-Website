@@ -116,7 +116,7 @@ export default function AdminAuditLogs() {
               <option value="all">All Entity Actions</option>
               <option value="registration">Registrations</option>
               <option value="team">Teams</option>
-              <option value="event">Events</option>
+              <option value="event_track">Event Tracks</option>
               <option value="admin">Admin Accounts</option>
               <option value="announcement">Announcements</option>
               <option value="ambassador">Ambassadors</option>

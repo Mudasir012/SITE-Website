@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+﻿import { createClient } from '@supabase/supabase-js';
 import { apiFetch } from './api.js';
 import {
   sendRegistrationApprovalEmail,
@@ -374,14 +374,14 @@ export const adminService = {
 
     const [
       { data: regs },
-      { data: events },
+      { data: tracks },
       { data: teams },
       { data: ambassadors },
       { data: auditLogs },
       { data: settings },
     ] = await Promise.all([
       supabase.from('registrations').select('*').is('deleted_at', null),
-      supabase.from('events').select('*').is('deleted_at', null).eq('is_archived', false),
+      supabase.from('event_tracks').select('slug, title, capacity').is('deleted_at', null),
       supabase.from('teams').select('*').is('deleted_at', null),
       supabase.from('ambassadors').select('*').is('deleted_at', null),
       supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(8),
@@ -389,7 +389,7 @@ export const adminService = {
     ]);
 
     const regList = regs || [];
-    const eventList = events || [];
+    const trackList = tracks || [];
     const teamList = teams || [];
     const ambList = ambassadors || [];
 
@@ -401,7 +401,7 @@ export const adminService = {
       waitlisted: regList.filter(r => r.status === 'waitlisted').length,
       teams: teamList.length,
       approvedTeams: teamList.filter(t => t.status === 'approved').length,
-      activeEvents: eventList.length,
+      activeEvents: trackList.length,
       ambassadors: ambList.length,
       totalReferrals: ambList.reduce((acc, a) => acc + (a.referral_count || 0), 0),
     };
@@ -421,21 +421,25 @@ export const adminService = {
       });
     }
 
-    // Capacity gauges
-    const eventCapacities = eventList.map(ev => {
-      const approvedCount = regList.filter(r => r.event_id === ev.id && r.status === 'approved').length;
-      const totalRegistered = regList.filter(r => r.event_id === ev.id).length;
-      const pct = Math.min(100, Math.round((approvedCount / (ev.capacity || 1)) * 100));
-      return {
-        id: ev.id,
-        title: ev.title,
-        capacity: ev.capacity,
-        approvedCount,
-        totalRegistered,
-        percentage: pct,
-        isFull: approvedCount >= ev.capacity,
-      };
-    });
+    // Capacity gauges — only tracks an admin has given a capacity limit to.
+    const eventCapacities = trackList
+      .filter((track) => track.capacity)
+      .map((track) => {
+        const approvedCount = regList.filter(
+          (r) => r.event_slug === track.slug && r.status === 'approved'
+        ).length;
+        const totalRegistered = regList.filter((r) => r.event_slug === track.slug).length;
+        const pct = Math.min(100, Math.round((approvedCount / track.capacity) * 100));
+        return {
+          id: track.slug,
+          title: track.title || track.slug,
+          capacity: track.capacity,
+          approvedCount,
+          totalRegistered,
+          percentage: pct,
+          isFull: approvedCount >= track.capacity,
+        };
+      });
 
     return {
       counts,
@@ -476,7 +480,7 @@ export const adminService = {
   },
 
   // ── Registrations Management ──
-  async getRegistrations({ search = '', status = 'all', eventId = 'all', page = 1, limit = 10, sortBy = 'created_at', sortOrder = 'desc', showDeleted = false } = {}) {
+  async getRegistrations({ search = '', status = 'all', eventSlug = 'all', page = 1, limit = 10, sortBy = 'created_at', sortOrder = 'desc', showDeleted = false } = {}) {
     if (!supabase) return { items: [], total: 0, page: 1, totalPages: 1 };
 
     let query = supabase.from('registrations').select('*', { count: 'exact' });
@@ -491,8 +495,9 @@ export const adminService = {
       query = query.eq('status', status);
     }
 
-    if (eventId !== 'all') {
-      query = query.eq('event_id', eventId);
+    // Public registrations are keyed by event_slug, not the legacy event_id.
+    if (eventSlug !== 'all') {
+      query = query.eq('event_slug', eventSlug);
     }
 
     const searchTerm = safeFilterText(search);
@@ -523,19 +528,30 @@ export const adminService = {
 
     // Check capacity before approving
     if (newStatus === 'approved') {
-      const { data: reg } = await supabase.from('registrations').select('event_id, full_name, user_email').eq('id', id).single();
-      if (reg?.event_id) {
-        const { data: ev } = await supabase.from('events').select('capacity').eq('id', reg.event_id).single();
+      const { data: reg } = await supabase
+        .from('registrations')
+        .select('event_slug, event_name, full_name, user_email')
+        .eq('id', id)
+        .single();
+
+      if (reg?.event_slug) {
+        const { data: track } = await supabase
+          .from('event_tracks')
+          .select('capacity')
+          .eq('slug', reg.event_slug)
+          .is('deleted_at', null)
+          .maybeSingle();
+
         const { count: approvedCount } = await supabase
           .from('registrations')
           .select('*', { count: 'exact', head: true })
-          .eq('event_id', reg.event_id)
+          .eq('event_slug', reg.event_slug)
           .eq('status', 'approved')
           .is('deleted_at', null);
 
-        if (ev && approvedCount >= ev.capacity) {
+        if (track?.capacity && (approvedCount || 0) >= track.capacity) {
           newStatus = 'waitlisted';
-          customNotes = (customNotes ? `${customNotes}\n` : '') + `[Auto-waitlisted: Event reached maximum capacity (${ev.capacity})]`;
+          customNotes = (customNotes ? `${customNotes}\n` : '') + `[Auto-waitlisted: Event reached maximum capacity (${track.capacity})]`;
         }
       }
     }
@@ -559,18 +575,21 @@ export const adminService = {
     if (newStatus === 'approved' && data?.user_email) {
       try {
         const accessToken = await getAdminAccessToken();
-        const { data: evData } = await supabase
-          .from('events')
-          .select('title, venue, start_date')
-          .eq('id', data.event_id)
-          .maybeSingle();
+        const { data: trackData } = data.event_slug
+          ? await supabase
+              .from('event_tracks')
+              .select('venue, start_date')
+              .eq('slug', data.event_slug)
+              .is('deleted_at', null)
+              .maybeSingle()
+          : { data: null };
 
         await sendRegistrationApprovalEmail({
           to: data.user_email,
           fullName: data.full_name,
-          eventTitle: evData?.title || data.event_name || 'CITE 2026 Track',
-          venue: evData?.venue || 'CS Complex, COMSATS Abbottabad',
-          dates: evData?.start_date ? new Date(evData.start_date).toLocaleDateString() : 'December 2026',
+          eventTitle: data.event_name || 'CITE 2026 Track',
+          venue: trackData?.venue || 'CS Complex, COMSATS Abbottabad',
+          dates: trackData?.start_date ? new Date(trackData.start_date).toLocaleDateString() : 'December 2026',
           accessToken,
         });
       } catch (mailErr) {
@@ -622,7 +641,9 @@ export const adminService = {
   },
 
   // ── Teams Management ──
-  async getTeams({ search = '', status = 'all', eventId = 'all', showDeleted = false } = {}) {
+  // Teams still key off the legacy events table; there is no event_slug column,
+  // so the event filter was removed rather than left querying a dead join.
+  async getTeams({ search = '', status = 'all', showDeleted = false } = {}) {
     if (!supabase) return [];
     let query = supabase.from('teams').select('*, events(title)');
 
@@ -633,7 +654,6 @@ export const adminService = {
     }
 
     if (status !== 'all') query = query.eq('status', status);
-    if (eventId !== 'all') query = query.eq('event_id', eventId);
     const searchTerm = safeFilterText(search);
     if (searchTerm) {
       query = query.or(`name.ilike.%${searchTerm}%,leader_email.ilike.%${searchTerm}%`);
@@ -715,120 +735,6 @@ export const adminService = {
     return true;
   },
 
-  // ── Events Management ──
-  async getEvents({ includeArchived = true, showDeleted = false } = {}) {
-    if (!supabase) return [];
-    let query = supabase.from('events').select('*');
-
-    if (!showDeleted) query = query.is('deleted_at', null);
-    else query = query.not('deleted_at', 'is', null);
-
-    if (!includeArchived) query = query.eq('is_archived', false);
-
-    const { data: events, error } = await query.order('created_at', { ascending: true });
-    if (error) throw error;
-
-    // Fetch approved & pending counts for each event
-    const { data: regs } = await supabase
-      .from('registrations')
-      .select('event_id, status')
-      .is('deleted_at', null);
-
-    const regList = regs || [];
-
-    return (events || []).map(e => {
-      const eventRegs = regList.filter(r => r.event_id === e.id);
-      const approved = eventRegs.filter(r => r.status === 'approved').length;
-      const pending = eventRegs.filter(r => r.status === 'pending').length;
-      return {
-        ...e,
-        stats: {
-          total: eventRegs.length,
-          approved,
-          pending,
-          remaining: Math.max(0, e.capacity - approved),
-        },
-      };
-    });
-  },
-
-  async saveEvent(eventData) {
-    if (!supabase) throw new Error('The admin portal is temporarily unavailable. Please try again shortly.');
-    const curAdmin = await this.getCurrentAdmin();
-
-    if (eventData.id) {
-      const { data, error } = await supabase
-        .from('events')
-        .update({
-          ...eventData,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', eventData.id)
-        .select()
-        .single();
-      if (error) throw error;
-      await logAudit(curAdmin?.email, 'UPDATE_EVENT', 'event', eventData.id, { title: eventData.title });
-      return data;
-    }
-
-    const newEvent = {
-      ...eventData,
-      slug: (eventData.title || 'event').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      registration_open: eventData.registration_open ?? true,
-      is_archived: false,
-    };
-
-    const { data, error } = await supabase
-      .from('events')
-      .insert([newEvent])
-      .select()
-      .single();
-
-    if (error) throw error;
-    await logAudit(curAdmin?.email, 'CREATE_EVENT', 'event', data?.id, { title: newEvent.title });
-    return data;
-  },
-
-  async toggleEventRegistration(eventId, isOpen) {
-    if (!supabase) return false;
-    const curAdmin = await this.getCurrentAdmin();
-    const { data, error } = await supabase
-      .from('events')
-      .update({ registration_open: isOpen, updated_at: new Date().toISOString() })
-      .eq('id', eventId)
-      .select()
-      .single();
-    if (error) throw error;
-    await logAudit(curAdmin?.email, 'TOGGLE_EVENT_REGISTRATION', 'event', eventId, { isOpen });
-    return data;
-  },
-
-  async toggleEventArchive(eventId, isArchived) {
-    if (!supabase) return false;
-    const curAdmin = await this.getCurrentAdmin();
-    const { data, error } = await supabase
-      .from('events')
-      .update({ is_archived: isArchived, updated_at: new Date().toISOString() })
-      .eq('id', eventId)
-      .select()
-      .single();
-    if (error) throw error;
-    await logAudit(curAdmin?.email, 'ARCHIVE_EVENT', 'event', eventId, { isArchived });
-    return data;
-  },
-
-  async softDeleteEvent(eventId) {
-    if (!supabase) return false;
-    const curAdmin = await this.getCurrentAdmin();
-    const { error } = await supabase
-      .from('events')
-      .update({ deleted_at: new Date().toISOString() })
-      .eq('id', eventId);
-    if (error) throw error;
-    await logAudit(curAdmin?.email, 'SOFT_DELETE_EVENT', 'event', eventId);
-    return true;
-  },
-
   // ── Public event-page tracks (src/data/tracks.js overrides) ──
   /**
    * Read only the fields that differ from the shipped defaults so the editor
@@ -903,6 +809,41 @@ export const adminService = {
     return true;
   },
 
+  /**
+   * Open or close every public event page in a single statement. Tracks without
+   * a row yet get one created, so the bulk action applies to all 18.
+   */
+  async setAllTracksRegistrationOpen(slugs, isOpen) {
+    if (!supabase) throw new Error('The admin portal is temporarily unavailable. Please try again shortly.');
+    if (!Array.isArray(slugs) || slugs.length === 0) {
+      throw new Error('No event tracks were found to update.');
+    }
+
+    const curAdmin = await this.getCurrentAdmin();
+    const now = new Date().toISOString();
+
+    const rows = slugs.map((slug) => ({
+      slug,
+      registration_open: Boolean(isOpen),
+      updated_at: now,
+    }));
+
+    const { data, error } = await supabase
+      .from('event_tracks')
+      .upsert(rows, { onConflict: 'slug' })
+      .select();
+
+    if (error) throw error;
+
+    await logAudit(
+      curAdmin?.email,
+      isOpen ? 'OPEN_ALL_TRACKS' : 'CLOSE_ALL_TRACKS',
+      'event_track',
+      'all',
+      { registration_open: Boolean(isOpen), count: rows.length }
+    );
+    return data || [];
+  },
   // ── Ambassadors Management ──
   async getAmbassadors({ status = 'all', search = '', showDeleted = false } = {}) {
     if (!supabase) return [];
@@ -1003,7 +944,7 @@ export const adminService = {
   },
 
   // ── Communication & Announcements ──
-  async previewRecipientCount(targetGroup, eventId = 'all') {
+  async previewRecipientCount(targetGroup, eventSlug = 'all') {
     if (!supabase) return 0;
     let query = supabase.from('registrations').select('*', { count: 'exact', head: true }).is('deleted_at', null);
 
@@ -1016,8 +957,8 @@ export const adminService = {
       return count || 0;
     }
 
-    if (targetGroup === 'event' && eventId !== 'all') {
-      query = query.eq('event_id', eventId);
+    if (targetGroup === 'event' && eventSlug !== 'all') {
+      query = query.eq('event_slug', eventSlug);
     }
 
     const { count, error } = await query;
@@ -1025,7 +966,7 @@ export const adminService = {
     return count || 0;
   },
 
-  async getRecipientEmails(targetGroup, eventId = 'all') {
+  async getRecipientEmails(targetGroup, eventSlug = 'all') {
     if (!supabase) return [];
     let query = supabase.from('registrations').select('user_email').is('deleted_at', null);
 
@@ -1038,20 +979,20 @@ export const adminService = {
       return (data || []).map(a => a.email).filter(Boolean);
     }
 
-    if (targetGroup === 'event' && eventId !== 'all') {
-      query = query.eq('event_id', eventId);
+    if (targetGroup === 'event' && eventSlug !== 'all') {
+      query = query.eq('event_slug', eventSlug);
     }
 
     const { data } = await query;
     return (data || []).map(r => r.user_email).filter(Boolean);
   },
 
-  async sendAnnouncement({ subject, body, targetGroup, eventId, isTest = false, testRecipient = '' }) {
+  async sendAnnouncement({ subject, body, targetGroup, eventSlug = 'all', isTest = false, testRecipient = '' }) {
     if (!supabase) throw new Error('The admin portal is temporarily unavailable. Please try again shortly.');
     const curAdmin = await this.getCurrentAdmin();
     const accessToken = await getAdminAccessToken();
     if (!accessToken) throw new Error('Your admin session has expired. Please sign in again.');
-    const count = isTest ? 1 : await this.previewRecipientCount(targetGroup, eventId);
+    const count = isTest ? 1 : await this.previewRecipientCount(targetGroup, eventSlug);
 
     const announcement = {
       subject,
@@ -1089,7 +1030,7 @@ export const adminService = {
         throw deliveryErr;
       }
     } else if (!isTest) {
-      const emailList = await this.getRecipientEmails(targetGroup, eventId);
+      const emailList = await this.getRecipientEmails(targetGroup, eventSlug);
       if (emailList.length > 0) {
         for (const recipient of emailList) {
           try {
@@ -1142,24 +1083,21 @@ export const adminService = {
     const [
       { data: regs },
       { data: teams },
-      { data: events },
     ] = await Promise.all([
       supabase.from('registrations').select('*').not('deleted_at', 'is', null),
       supabase.from('teams').select('*').not('deleted_at', 'is', null),
-      supabase.from('events').select('*').not('deleted_at', 'is', null),
     ]);
 
     const deletedRegs = (regs || []).map(r => ({ ...r, item_type: 'registration', title: `${r.full_name} (${r.user_email})` }));
     const deletedTeams = (teams || []).map(t => ({ ...t, item_type: 'team', title: `Team: ${t.name}` }));
-    const deletedEvents = (events || []).map(e => ({ ...e, item_type: 'event', title: `Event: ${e.title}` }));
 
-    return [...deletedRegs, ...deletedTeams, ...deletedEvents];
+    return [...deletedRegs, ...deletedTeams];
   },
 
   async restoreItem(itemType, id) {
     if (!supabase) return false;
     const curAdmin = await this.getCurrentAdmin();
-    const table = itemType === 'registration' ? 'registrations' : itemType === 'team' ? 'teams' : 'events';
+    const table = itemType === 'registration' ? 'registrations' : 'teams';
     const { error } = await supabase
       .from(table)
       .update({ deleted_at: null })
@@ -1185,7 +1123,7 @@ export const adminService = {
       'Roll Number',
       'Gender',
       'Event',
-      'Event ID',
+      'Event Slug',
       'Team ID',
       'Is Leader',
       'Status',
@@ -1204,7 +1142,7 @@ export const adminService = {
       escapeCsvCell(r.roll_number),
       escapeCsvCell(r.gender),
       escapeCsvCell(r.event_name),
-      escapeCsvCell(r.event_id),
+      escapeCsvCell(r.event_slug),
       escapeCsvCell(r.team_id),
       escapeCsvCell(r.is_leader ? 'Yes' : 'No'),
       escapeCsvCell(r.status || 'pending'),
